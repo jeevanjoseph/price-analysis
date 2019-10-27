@@ -1,5 +1,6 @@
 library(tidyr)
 library(ggplot2)
+source("ford.R", local = TRUE)
 
 data <- read.csv("cars.csv");
 summary(data);
@@ -9,8 +10,15 @@ summary(data$type)
 
 
 
+source("ford.R", local = TRUE)
+#complete <- data[complete.cases(data),]
+complete <- drop_na(data,odometer)
+complete <- drop_na(complete,year)
+complete <- drop_na(complete,make)
+complete <- drop_na(complete,manufacturer)
 
-complete <- data[complete.cases(data),]
+nrow(complete)
+
 
 # clean manufacturers
 complete <- complete[which(complete$manufacturer!="" & 
@@ -34,18 +42,18 @@ complete <- complete[which(complete$manufacturer!="" &
 
 complete$price <-with(complete,as.numeric(as.character(price)))
 summary(complete$price)
-complete <- complete[which(complete$price > 300 & complete$price < 80000 ),]
+complete <- complete[which(complete$price > 1100 & complete$price < 80000 ),]
 
 # clean odometer
 complete$odometer <- with(complete,as.numeric(as.character(odometer)))
 ## remove 0 readings ?
-complete <- complete[which(complete$odometer > 50 ),]
+complete <- complete[which(complete$odometer > 500 & complete$odometer < 200000),]
 
 # Clean Year
 complete <- complete[which(complete$year!="" & complete$year!=" deals on wheels"),]
 complete$year <- with(complete,as.numeric(as.character(year)))
 complete$age <- with(complete, 2019-year)
-complete <- complete[which(complete$age < 20 ),]
+complete <- complete[which(complete$age < 15 ),]
 
 #Clean state, city
 complete <- extract(complete,city,c("city","state"),"([a-z, ]*)?([A-Z]{2})?")
@@ -59,29 +67,29 @@ complete$city<- factor(complete$city)
 complete <- complete[which(complete$title_status!=""),]
 
 # Clean transmission
-complete <- complete[which(complete$transmission!=""),]
+#complete <- complete[which(complete$transmission!=""),]
 
 
 # Clean drive
-complete <- complete[which(complete$drive!=""),]
+#complete <- complete[which(complete$drive!=""),]
 
 # Clean size
-complete <- complete[which(complete$size!=""),]
+#complete <- complete[which(complete$size!=""),]
 
 # Clean type
-complete <- complete[which(complete$type!=""),]
+#complete <- complete[which(complete$type!=""),]
 
 # Clean paint_color
-complete <- complete[which(complete$paint_color!=""),]
+#complete <- complete[which(complete$paint_color!=""),]
 
 # Clean condition
 complete <- complete[which(complete$condition!=""),]
 
 # Clean cylinders
-complete <- complete[which(complete$cylinders!=""),]
+#complete <- complete[which(complete$cylinders!=""),]
 
 # Clean fuel
-complete <- complete[which(complete$fuel!=""),]
+#complete <- complete[which(complete$fuel!=""),]
 
 
 ## reevaluate the factors
@@ -116,6 +124,49 @@ for (row in 1:nrow(bmw)) {
 bmw$model<-factor(bmw$model)
 bmw$trim<-factor(bmw$trim)
 levels(bmw$model)
+
+### ford
+
+## extract ford make in to model and trim based on the spacing. @todo cleanup the spacing 
+ford <- others[which(others$manufacturer=="ford"),]
+others <- others[which(others$manufacturer!="ford"),]
+nrow(ford)
+for (row in 1:nrow(ford)) {
+    make <- ford[row, "make"]
+    # Collapse 3-Series and 3 Series in to a single level 
+    model <- ford_models(make)
+    trim  <- ford_trims(make,model)    
+    
+    
+    if(model == ""){
+        ford[row, "model"] = NA
+    }else{
+        ford[row, "model"] = model
+    }
+    
+    if(trim == ""){
+        ford[row, "trim"] = NA
+    }else{
+        ford[row, "trim"] = trim
+    }
+    
+}
+nrow(ford)
+ford$model<-factor(ford$model)
+ford$trim<-factor(ford$trim)
+ford[] <- lapply(ford, function(x) if(is.factor(x)) factor(x) else x)
+
+ford <- drop_na(ford,model)
+droplevels.factor(ford$model)
+levels(ford$model)
+valid_models <- ford %>% group_by(model) %>% summarise(count = n()) %>% filter(count > 10)
+valid_trims <- ford %>% group_by(trim) %>% summarise(count = n()) %>% filter(count>10)
+
+nrow(ford %>% filter(is.na(model)))
+
+ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(model,trim) %>% summarise(count = n()) %>% View
+
+ford <- ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim)
 
 ### Toyota
 
@@ -161,25 +212,6 @@ for (row in 1:nrow(chevrolet)) {
 chevrolet$model<-factor(chevrolet$model)
 chevrolet$trim<-chevrolet(acura$trim)
 levels(chevrolet$model)
-
-
-### ford
-
-## extract ford make in to model and trim based on the spacing. @todo cleanup the spacing 
-ford <- others[which(others$manufacturer=="ford"),]
-others <- others[which(others$manufacturer!="ford"),]
-
-for (row in 1:nrow(ford)) {
-    make <- ford[row, "make"]
-    # Collapse 3-Series and 3 Series in to a single level 
-    ford[row, "model"] = gsub("(.*)?[ ](.*)?","\\1",make,ignore.case = TRUE)
-    ford[row, "trim"] = gsub("(.*)?[ ](.*)?","\\2",make,ignore.case = TRUE)
-}
-
-ford$model<-factor(ford$model)
-ford$trim<-ford(acura$trim)
-levels(ford$model)
-
 
 ### buick
 
@@ -692,11 +724,17 @@ for (row in 1:nrow(jaguar)) {
 jaguar$model<-factor(jaguar$model)
 jaguar$trim<-factor(jaguar$trim)
 levels(jaguar$model)
-freq = table(col(jaguar),as.matrix(jaguar))
-jag_dat=data.frame(cbind(freq))
+
+ford %>% 
+    group_by(age) %>% 
+    summarise(median_price = log(median(price[age>=0 && age<=20]))) %>% 
+    ggplot( aes(x=age, y=median_price)) + geom_point(aes(col=age)) + geom_smooth(method="lm")
 
 
-ggplot(data=ford, aes(x=age, y=price)) + geom_point(aes(col=state)) + geom_smooth(method="lm")
+
+rbind(toyota, honda, hyundai,ford) %>% group_by(manufacturer,age) %>% summarise(median_price = log(median(price[age>=0 && age<=18])), cnt = n()) %>% ggplot( aes(x=age, y=cnt)) + geom_point(aes(col=manufacturer)) + geom_smooth(method="lm")
+
+ggplot(data=ford, aes(x=age, y=price)) + geom_point(aes(col=model)) + geom_smooth(method="lm")
 ggplot(data=ford, aes(y=price, x=state)) + 
     geom_bar(position="dodge", stat="identity")
 
@@ -711,7 +749,14 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 
 cor(complete$price,complete$paint_color)
 
-linearMod <- lm(price ~ age+condition+cylinders+type+drive+fuel+odometer+transmission+title_status+model+trim, data=toyota) 
+summary(ford)
+linearMod <- lm(price ~ age+odometer+model+trim, data=bmw) 
 #bigmod <- linearMod
 
+residual <- resid(linearMod)
+
+plot(linearMod)
+ggplot(data=bmw,aes(x=age,y=price)) + geom_point()
+
 summary(linearMod)
+
