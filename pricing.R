@@ -1,59 +1,60 @@
+install.packages("tidyverse")
 library(tidyr)
+library(readr)
+library(dplyr)
 library(ggplot2)
 source("ford.R", local = TRUE)
 
-data <- read.csv("cars.csv");
+data <- read_csv("craigslistVehicles_semi.csv");
 summary(data);
 #plot(as.numeric(data$year),as.numeric(data$odometer))
 levels(data$type)
 summary(data$type)
-
+data %>%group_by(type)%>%summarise(count = n()) %>% View
 
 
 source("ford.R", local = TRUE)
 #complete <- data[complete.cases(data),]
-complete <- drop_na(data,odometer)
-complete <- drop_na(complete,year)
-complete <- drop_na(complete,make)
-complete <- drop_na(complete,manufacturer)
-
-nrow(complete)
-
+complete <- data %>%  
+    drop_na(odometer) %>%
+    drop_na(year) %>%
+    drop_na(make) %>%
+    drop_na(manufacturer)
 
 # clean manufacturers
-complete <- complete[which(complete$manufacturer!="" & 
-                               complete$manufacturer!=" deals on tires" &
-                               complete$manufacturer!="1976"&
-                               complete$manufacturer!="1998"&
-                               complete$manufacturer!="1999"&
-                               complete$manufacturer!="2000"&
-                               complete$manufacturer!="2001"&
-                               complete$manufacturer!="2002"&
-                               complete$manufacturer!="2003"&
-                               complete$manufacturer!="2004"&           
-                               complete$manufacturer!="2005"&
-                               complete$manufacturer!="2006"&
-                               complete$manufacturer!="2007"&
-                               complete$manufacturer!="2008"&
-                               complete$manufacturer!="hennesseylevels"&
-                               complete$manufacturer!="harley-davidson"),]
+complete %>% filter(price==2793940305)
+complete %>% group_by(price)%>%summarise(count = n()) %>% View
+sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>1000)
+
+complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
+complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% View
 
 # clean price
 
-complete$price <-with(complete,as.numeric(as.character(price)))
+#complete$price <-with(complete,as.numeric(as.character(price)))
+quantile(complete$price,probs = seq(0,1,.01))
+quantile(complete$price,.05)
 summary(complete$price)
-complete <- complete[which(complete$price > 1100 & complete$price < 80000 ),]
+price_dist<-complete %>%filter(price<= quantile(complete$price,.99)&price >= quantile(complete$price,.1)) %>% group_by(price) %>% summarise(count = n()) 
+ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
+
+
+
+complete <- complete %>%filter(price<= quantile(complete$price,.99)&price >= quantile(complete$price,.1)) 
 
 # clean odometer
-complete$odometer <- with(complete,as.numeric(as.character(odometer)))
+quantile(complete$odometer,probs = seq(0,1,.01))
+odo_dist<-complete %>%filter(odometer<= quantile(complete$odometer,.99)&odometer >= quantile(complete$odometer,.1)) %>% group_by(odometer) %>% summarise(count = n()) 
+ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point()
+# this will likely need to be binned.
 ## remove 0 readings ?
 complete <- complete[which(complete$odometer > 500 & complete$odometer < 200000),]
 
 # Clean Year
 complete <- complete[which(complete$year!="" & complete$year!=" deals on wheels"),]
 complete$year <- with(complete,as.numeric(as.character(year)))
-complete$age <- with(complete, 2019-year)
-complete <- complete[which(complete$age < 15 ),]
+complete$age <- with(complete, 2020-year)
+complete <- complete[which(complete$age < 18 ),]
 
 #Clean state, city
 complete <- extract(complete,city,c("city","state"),"([a-z, ]*)?([A-Z]{2})?")
@@ -164,7 +165,7 @@ valid_trims <- ford %>% group_by(trim) %>% summarise(count = n()) %>% filter(cou
 
 nrow(ford %>% filter(is.na(model)))
 
-ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(model,trim) %>% summarise(count = n()) %>% View
+ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(trim) %>% summarise(count = n()) %>% View
 
 ford <- ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim)
 
@@ -750,13 +751,14 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 cor(complete$price,complete$paint_color)
 
 summary(ford)
-linearMod <- lm(price ~ age+odometer+model+trim, data=bmw) 
+linearMod <- lm(price ~ age*odometer*model+type+title_status+trim, data=bmw) 
+summary(linearMod)
+
 #bigmod <- linearMod
 
 residual <- resid(linearMod)
 
 plot(linearMod)
-ggplot(data=bmw,aes(x=age,y=price)) + geom_point()
+ggplot(data=ford,aes(x=odometer,y=price)) + geom_point()
 
-summary(linearMod)
 

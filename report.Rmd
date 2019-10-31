@@ -1,0 +1,92 @@
+---
+title: "Statistical Predictive Model for Automobile Pricing"
+output: html_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## R Markdown
+
+First we ensure that the required packages for our analysis are installed.
+```{r}
+#install.packages("tidyverse")
+library(tidyr)
+library(readr)
+library(dplyr)
+library(ggplot2)
+source("ford.R", local = TRUE)
+```
+
+Now we load the data. The data load uses the `read_csv` function from the `dplyr` package.
+```{R}
+data <- read_csv("craigslistVehicles_semi.csv");
+```
+
+
+Lets quickly summarise the data that was loaded
+```{R}
+summary(data);
+#plot(as.numeric(data$year),as.numeric(data$odometer))
+#levels(data$type)
+#summary(data$type)
+#data %>%group_by(type)%>%summarise(count = n()) %>% View
+```
+
+
+We can see from the summary that we have observations in our dataset that are incomplete. 
+We have `NA`s for several variables, and we shall remove these incomplete observations.
+``` {R}
+
+#complete <- data[complete.cases(data),]
+complete <- data %>%  
+    drop_na(odometer) %>%
+    drop_na(year) %>%
+    drop_na(make) %>%
+    drop_na(manufacturer)
+```
+
+Now that we have done a bit more clean up, lets get some summary stats for the manufacturers
+```{R}
+
+# clean manufacturers
+
+complete %>% group_by(manufacturer)%>%summarise(count = n())
+sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>1000)
+
+complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
+#complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% View
+
+# clean price
+
+#complete$price <-with(complete,as.numeric(as.character(price)))
+quantile(complete$price,probs = seq(0,1,.01))
+quantile(complete$price,.05)
+summary(complete$price)
+price_dist<-complete %>%filter(price< quantile(complete$price,.99)) %>% group_by(price) %>% summarise(count = n()) 
+```
+Lets plot the distribution of the prices
+```{R}
+ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
+```
+We can still see some of the extreme observations on te lower end. Specifically, there are many observations that have a `price` of `0`. These typically mean that the seller is trying to negotiate the best offer from potential buyers. We can see that upto the 10th percentile, the `price` is `0`. We are excluding these observations, as the price is not indicative of the actual expected sale price.
+
+```{r}
+price_dist<-complete %>%filter(price > quantile(complete$price,.1) & price < quantile(complete$price,.95)) %>% group_by(price) %>% summarise(count = n()) 
+ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r price_dist, echo=FALSE}
+ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+[ford]["https://www.ford.com"]
