@@ -2,14 +2,45 @@
 title: "Statistical Predictive Model for Automobile Pricing"
 output: html_document
 editor_options: 
-  chunk_output_type: inline
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-## R Markdown
+## Abstract
+
+In this paper, I study classified adverisement data to build a reusable statistical
+model for price prediction of automobiles. Teh data set is cleaned and filtered to 
+limit the study to main stream consumer automobiles. The industry's reliance on 
+proprietary databases and the lack of transparency around the currently avaialable
+valuation models provide motivation to build an open data model for valuation.
+Such a model will be free from any potential conflicts of interests, and will be 
+fully transparent.
+
+In this paper, I use the dataset that collects classified advertisements from 
+the website craigslist.org. I prepare the data for analysis, perform exploratory 
+analysis, and finally build a reusable predictive model. 
+
+
+## Research Question
+Can we build a resusable statistical model to perform automobile valuations based purely on open data ?
+
+The automotive segment is dominated by
+dealers and middlemen who often inflate pricing and make it difficult to understand 
+the true market worth of an automobile. There are proprietary databases in the 
+domain, however they use closed data sources and monetize the database to provide
+sales tools for dealerships which make them less transparent (Kelley Blue Book Inc.). 
+
+This study is aimed at creating a valuation model based on open-data from classified
+advertisements. Studies have shown that users prefer third party price evaluations
+than the dealership’s price evaluations and can have a positive impact on the 
+sale itself (Cox Automotive Inc.). I believe this study provides a valuable vector 
+in building an open and comprehensive model that makes the data transparent and 
+free of any conflicts of interest.
+
+### Setup
 
 First we ensure that the required packages for our analysis are installed.
 ```{r}
@@ -20,6 +51,19 @@ library(dplyr)
 library(ggplot2)
 source("ford.R", local = TRUE)
 ```
+
+
+## Exploratory Data analysis
+
+In this stage of the study, we load and summarize the data. We develop a better 
+understanding of the extreme and abberant values in the dataset and detect and 
+eliminate outliers that do not contribute to the model or are incorrectly recorded.
+
+We also break down the data by the manufacturer and eliminate exotic and classic 
+cars from the list to avoid skew, as these vehicles do not usually follow the 
+same valuation as mainstream consumer automobiles. 
+
+### Loading the data
 
 Now we load the data. The data load uses the `read_csv` function from the `dplyr` package.
 ```{R}
@@ -36,11 +80,11 @@ summary(data);
 #data %>%group_by(type)%>%summarise(count = n()) %>% View
 ```
 
+### Remove incomplete observations from the dataset
 
 We can see from the summary that we have observations in our dataset that are incomplete. 
 We have `NA`s for several variables, and we shall remove these incomplete observations.
 ``` {R}
-
 #complete <- data[complete.cases(data),]
 complete <- data %>%  
     drop_na(odometer) %>%
@@ -59,7 +103,10 @@ sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% fil
 
 complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
 #complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% View
+```
 
+### Understanding the Price distribution
+```{R}
 # clean price
 
 #complete$price <-with(complete,as.numeric(as.character(price)))
@@ -78,15 +125,5 @@ We can still see some of the extreme observations on te lower end. Specifically,
 price_dist<-complete %>%filter(price > quantile(complete$price,.1) & price < quantile(complete$price,.95)) %>% group_by(price) %>% summarise(count = n()) 
 ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
 ```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r price_dist, echo=FALSE}
-ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
 [ford]["https://www.ford.com"]
