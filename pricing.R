@@ -45,7 +45,7 @@ year_dist <- complete %>% group_by(year) %>% summarise(count = n()) %>% arrange(
 ggplot(data=year_dist,aes(x=year,y=count)) + geom_point()
 
 complete$age <- with(complete, 2020-year)
-complete <- complete %>% filter(age<=18 & age>=0)
+complete <- complete %>% filter(age<=20 & age>=0)
 
 # clean odometer
 
@@ -87,7 +87,10 @@ ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point()
 # this will likely need to be binned.
 ## remove 0 readings ?
 
-complete <- complete %>% mutate(mileage = cut(odometer, breaks = c(0,5000,15000,25000,35000,45000,60000,75000,90000,105000,125000,150000,200000,250000,275000,300000,350000))) 
+### !!!!!!!!!!    Most important   !!!!!!!!!!!
+### the bins here determne the adj-R-squared and the performance
+#complete <- complete %>% mutate(mileage = cut(odometer, breaks = c(0,5000,15000,25000,35000,45000,60000,75000,90000,105000,125000,150000,200000,250000,275000,300000,350000))) 
+complete <- complete %>% mutate(mileage = cut(odometer, breaks = quantile(complete$odometer,probs = seq(0,1,.05)))) 
 mileage_dist <- complete %>% group_by(mileage) %>% summarise(count=n(),pr=median(price))
 ggplot(data=mileage_dist,aes(x=mileage,y=count,fill=pr)) + geom_bar(stat="identity", width=1)
 
@@ -106,12 +109,11 @@ price_dist<-complete %>%
     summarise(count = n())
 ggplot(data=price_dist,aes(x=price_bin,y=count)) + geom_bar(stat="identity", width=1)
 
-complete <- complete %>% 
-    filter(price > 0) %>%
-    filter(price<= quantile(complete$price,.99) & price>= quantile(complete$price,.01) )
+complete <- complete %>% filter(price > 0)
+complete <- complete %>% filter(price<= quantile(complete$price,.99) & price>= quantile(complete$price,.02) )
 
-summary(price_clean$price)
-hist(price_clean$price)
+summary(complete$price)
+hist(complete$price)
 
 #binned <- complete %>% mutate(price_bin = cut(price, breaks = quantile(price, probs = seq(0, 1, .1)))) %>% group_by(price_bin)%>%summarise(count = n())
 #ggplot(data=binned,aes(x=price_bin,y=count,fill=price_bin)) + geom_bar(stat="identity", width=1)
@@ -132,8 +134,7 @@ complete$State<- factor(complete$State)
 complete$City<- factor(complete$City)
 levels(complete$State)
 
-# Clean tilte status
-#complete <- complete[which(complete$title_status!=""),]
+
 
 # Clean transmission
 #complete <- complete[which(complete$transmission!=""),]
@@ -150,9 +151,6 @@ levels(complete$State)
 
 # Clean paint_color
 #complete <- complete[which(complete$paint_color!=""),]
-
-# Clean condition
-#complete <- complete[which(complete$condition!=""),]
 
 # Clean cylinders
 #complete <- complete[which(complete$cylinders!=""),]
@@ -179,7 +177,7 @@ for (row in 1:nrow(bmw)) {
     if(model_start == "1" || model_start == "3" ||model_start == "5" ||model_start == "7" ) {
         bmw[row, "model"]<- paste(model_start,"series")
     }
-    else if(model_start == "m" || model_start == "x") {
+    else if(model_start == "m" || model_start == "x" ||model_start == "z") {
         ## for X and M models, model will be X{num}.
         ## whatever follows is used as a trim - will need more work to reduce the levels here.
         bmw[row, "model"] = substr(gsub("(x|m)[ \\-]?([0-9]+)","\\1\\2",make),1,2)
@@ -819,7 +817,7 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 cor(complete$price,complete$paint_color)
 
 summary(ford)
-linearMod <- lm(price ~ age*mileage*model+trim+type+title_status+size, data=ford) 
+linearMod <- lm(price ~ age*mileage*model+trim+title_status+condition, data=ford) 
 summary(linearMod)
 
 #bigmod <- linearMod
