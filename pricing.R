@@ -13,7 +13,7 @@ summary(data);
 #plot(as.numeric(data$year),as.numeric(data$odometer))
 levels(data$type)
 summary(data$type)
-data %>%group_by(type)%>%summarise(count = n()) %>% View
+data %>%group_by(manufacturer)%>%summarise(count = n()) %>% View
 
 
 source("ford.R", local = TRUE)
@@ -45,7 +45,7 @@ year_dist <- complete %>% group_by(year) %>% summarise(count = n()) %>% arrange(
 ggplot(data=year_dist,aes(x=year,y=count)) + geom_point()
 
 complete$age <- with(complete, 2020-year)
-complete <- complete %>% filter(age<=20 & age>=0)
+complete <- complete %>% filter(age<=18 & age>=0)
 
 # clean odometer
 
@@ -75,7 +75,7 @@ complete <- complete %>% filter(odometer<=quantile(odometer,0.99))
 # automobile being sold is new or used, we can estimate that these are the ones 
 # in excellent condition that are also in the model years 2019/2020.
 complete <- complete %>% 
-    filter(odometer >= quantile(odometer,0.02)  )
+    filter(odometer >= quantile(odometer,0.01)  )
 
 quantile(complete$odometer,probs = seq(0,1,.01))
 
@@ -123,21 +123,17 @@ hist(price_clean$price)
 # list all cities
 levels(factor(complete$city))
 
-ambiguous <- complete %>% filter(!str_detect(city,"[ ][:upper:]{2}")) %>% select(city)
-unambiguous <- complete %>% filter(str_detect(city,"[ ][:upper:]{2}")) %>% select(city)
-levels(factor(ambiguous$city))
-
 complete<-left_join(complete,cities,by="city_url")
 
 #complete <- extract(complete,city,c("City","State"),"([a-z/-]*)[, ]?([A-Z]{2})?")
 complete$State<- factor(complete$State)
 
 #complete <- extract(complete,city,c("city"),"([a-zA-Z]*)?")
-complete$city<- factor(complete$city)
+complete$City<- factor(complete$City)
 levels(complete$State)
 
 # Clean tilte status
-complete <- complete[which(complete$title_status!=""),]
+#complete <- complete[which(complete$title_status!=""),]
 
 # Clean transmission
 #complete <- complete[which(complete$transmission!=""),]
@@ -156,7 +152,7 @@ complete <- complete[which(complete$title_status!=""),]
 #complete <- complete[which(complete$paint_color!=""),]
 
 # Clean condition
-complete <- complete[which(complete$condition!=""),]
+#complete <- complete[which(complete$condition!=""),]
 
 # Clean cylinders
 #complete <- complete[which(complete$cylinders!=""),]
@@ -823,7 +819,7 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 cor(complete$price,complete$paint_color)
 
 summary(ford)
-linearMod <- lm(price ~ age*odometer*model+type+title_status+trim, data=ford) 
+linearMod <- lm(price ~ age*mileage*model+trim+type+title_status+size, data=ford) 
 summary(linearMod)
 
 #bigmod <- linearMod
