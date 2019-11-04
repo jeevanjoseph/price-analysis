@@ -2,10 +2,13 @@ install.packages("tidyverse")
 library(tidyr)
 library(readr)
 library(dplyr)
+library(stringr)
 library(ggplot2)
 source("ford.R", local = TRUE)
 
 data <- read_csv("craigslistVehicles_semi.csv");
+cities <- read_csv("cities.csv");
+cities <- distinct(cities,city_url,.keep_all = TRUE)
 summary(data);
 #plot(as.numeric(data$year),as.numeric(data$odometer))
 levels(data$type)
@@ -19,50 +22,119 @@ complete <- data %>%
     drop_na(odometer) %>%
     drop_na(year) %>%
     drop_na(make) %>%
-    drop_na(manufacturer)
+    drop_na(manufacturer) %>%
+    drop_na(title_status) %>% 
+    drop_na(condition)
 
 # clean manufacturers
-complete %>% filter(price==2793940305)
-complete %>% group_by(price)%>%summarise(count = n()) %>% View
-sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>1000)
+manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
+manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
+#ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
+
+sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>(.02*nrow(complete)))
 
 complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
-complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% View
+
+manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
+manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
+#ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
+
+
+# Clean Year
+year_dist <- complete %>% group_by(year) %>% summarise(count = n()) %>% arrange(count)
+ggplot(data=year_dist,aes(x=year,y=count)) + geom_point()
+
+complete$age <- with(complete, 2020-year)
+complete <- complete %>% filter(age<=20 & age>=0)
+
+# clean odometer
+
+# we seem to have a isngle influential outlier for the odometer reading
+
+# The third quantile and the Max are several orders of magnitude different
+summary(complete$odometer)
+# Discretizing the range of the odometer readings in to 10 equal intervals,
+# we see that a single observarion is in the 10th interval and every other
+# observation being in the 1st interval clearly indicating that the observation
+# is anomalous. The value itself is 102,102,785 or 102 million miles.
+# the valu eis so extreme that we can assume that its erroneous and a data entry 
+# mistake - likely the user meant 102,785 and repeated the character sequence 102
+#
+table(cut(complete$odometer, breaks = 10))
+
+# From teh data released by the Fedral Highway administration's offoce of 
+# Highway policy Information, vehicles travel an average of 11,789 miles /year.
+# Limiting this to our 20 year time frame, we can exlude vehicles that have 
+# more than 350k miles on it, and also observations where there are 0 miles on it.
+# The extreme observation is removed.
+
+complete <- complete %>% filter(odometer<=quantile(odometer,0.99))
+
+# We can also exclude observations that are reporting a 0 odometer reading unless they 
+# are a brand new vehicle. Since we do not have a field for indicating if the 
+# automobile being sold is new or used, we can estimate that these are the ones 
+# in excellent condition that are also in the model years 2019/2020.
+complete <- complete %>% 
+    filter(odometer >= quantile(odometer,0.02)  )
+
+quantile(complete$odometer,probs = seq(0,1,.01))
+
+odo_dist<-complete %>%group_by(odometer) %>% summarise(count = n()) 
+ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point()
+# the distribution indiacts that while some of the observations report very specific mileage,
+# other approximate or round off the mileage to a nearest number.
+# this is a case where we can discretize the valriables in to constant sized bins.
+# this will likely need to be binned.
+## remove 0 readings ?
+
+complete <- complete %>% mutate(mileage = cut(odometer, breaks = c(0,5000,15000,25000,35000,45000,60000,75000,90000,105000,125000,150000,200000,250000,275000,300000,350000))) 
+mileage_dist <- complete %>% group_by(mileage) %>% summarise(count=n(),pr=median(price))
+ggplot(data=mileage_dist,aes(x=mileage,y=count,fill=pr)) + geom_bar(stat="identity", width=1)
 
 # clean price
 
+complete%>%filter(price==NA)
 #complete$price <-with(complete,as.numeric(as.character(price)))
 quantile(complete$price,probs = seq(0,1,.01))
 quantile(complete$price,.05)
 summary(complete$price)
-price_dist<-complete %>%filter(price<= quantile(complete$price,.99)&price >= quantile(complete$price,.1)) %>% group_by(price) %>% summarise(count = n()) 
-ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
+price_dist<-complete %>% 
+    filter(price > 0) %>%
+    filter(price<= quantile(complete$price,.99) & price>= quantile(complete$price,.01) ) %>% 
+    mutate(price_bin = cut(price, breaks = c(0,1000,2500,3500,5000,6500,9000,12000,16000,20000,25000,30000,35000,40000,45000,50000))) %>%
+    group_by(price_bin) %>%
+    summarise(count = n())
+ggplot(data=price_dist,aes(x=price_bin,y=count)) + geom_bar(stat="identity", width=1)
 
+complete <- complete %>% 
+    filter(price > 0) %>%
+    filter(price<= quantile(complete$price,.99) & price>= quantile(complete$price,.01) )
 
+summary(price_clean$price)
+hist(price_clean$price)
 
-complete <- complete %>%filter(price<= quantile(complete$price,.99)&price >= quantile(complete$price,.1)) 
+#binned <- complete %>% mutate(price_bin = cut(price, breaks = quantile(price, probs = seq(0, 1, .1)))) %>% group_by(price_bin)%>%summarise(count = n())
+#ggplot(data=binned,aes(x=price_bin,y=count,fill=price_bin)) + geom_bar(stat="identity", width=1)
 
-# clean odometer
-quantile(complete$odometer,probs = seq(0,1,.01))
-odo_dist<-complete %>%filter(odometer<= quantile(complete$odometer,.99)&odometer >= quantile(complete$odometer,.1)) %>% group_by(odometer) %>% summarise(count = n()) 
-ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point()
-# this will likely need to be binned.
-## remove 0 readings ?
-complete <- complete[which(complete$odometer > 500 & complete$odometer < 200000),]
-
-# Clean Year
-complete <- complete[which(complete$year!="" & complete$year!=" deals on wheels"),]
-complete$year <- with(complete,as.numeric(as.character(year)))
-complete$age <- with(complete, 2020-year)
-complete <- complete[which(complete$age < 18 ),]
 
 #Clean state, city
-complete <- extract(complete,city,c("city","state"),"([a-z, ]*)?([A-Z]{2})?")
-complete$state<- factor(complete$state)
 
-complete <- extract(complete,city,c("city"),"([a-zA-Z]*)?")
+
+# list all cities
+levels(factor(complete$city))
+
+ambiguous <- complete %>% filter(!str_detect(city,"[ ][:upper:]{2}")) %>% select(city)
+unambiguous <- complete %>% filter(str_detect(city,"[ ][:upper:]{2}")) %>% select(city)
+levels(factor(ambiguous$city))
+
+complete<-left_join(complete,cities,by="city_url")
+
+#complete <- extract(complete,city,c("City","State"),"([a-z/-]*)[, ]?([A-Z]{2})?")
+complete$State<- factor(complete$State)
+
+#complete <- extract(complete,city,c("city"),"([a-zA-Z]*)?")
 complete$city<- factor(complete$city)
-
+levels(complete$State)
 
 # Clean tilte status
 complete <- complete[which(complete$title_status!=""),]
@@ -751,7 +823,7 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 cor(complete$price,complete$paint_color)
 
 summary(ford)
-linearMod <- lm(price ~ age*odometer*model+type+title_status+trim, data=bmw) 
+linearMod <- lm(price ~ age*odometer*model+type+title_status+trim, data=ford) 
 summary(linearMod)
 
 #bigmod <- linearMod

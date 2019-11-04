@@ -55,13 +55,12 @@ source("ford.R", local = TRUE)
 
 ## Exploratory Data analysis
 
-In this stage of the study, we load and summarize the data. We develop a better 
-understanding of the extreme and abberant values in the dataset and detect and 
-eliminate outliers that do not contribute to the model or are incorrectly recorded.
-
-We also break down the data by the manufacturer and eliminate exotic and classic 
-cars from the list to avoid skew, as these vehicles do not usually follow the 
-same valuation as mainstream consumer automobiles. 
+The first step in any investigation of data is to examine the univariate statistics
+of the variables in the dataset. we load and summarize the data to develop a better 
+understanding of the distribution and detect any anomalies such as extreme and 
+abberant values. This also helps us get an idea of some orders of magnitude 
+(such as the average ages, prices, mileage of the automobile listings) which will
+be useful in the subsequent analysis.
 
 ### Loading the data
 
@@ -71,7 +70,10 @@ data <- read_csv("craigslistVehicles_semi.csv");
 ```
 
 
-Lets quickly summarise the data that was loaded
+Lets quickly summarise the data that was loaded. From the summary we can see that 
+the data needs to be cleaned, as several features the set have missing values, and 
+the univariate statistics for the numeric data shows the existence of extreme values.
+
 ```{R}
 summary(data);
 #plot(as.numeric(data$year),as.numeric(data$odometer))
@@ -83,47 +85,228 @@ summary(data);
 ### Remove incomplete observations from the dataset
 
 We can see from the summary that we have observations in our dataset that are incomplete. 
-We have `NA`s for several variables, and we shall remove these incomplete observations.
-``` {R}
+We have missing and extreme values for several variables, and we shall remove 
+these incomplete observations.
+```{R}
 #complete <- data[complete.cases(data),]
 complete <- data %>%  
     drop_na(odometer) %>%
     drop_na(year) %>%
     drop_na(make) %>%
-    drop_na(manufacturer)
+    drop_na(manufacturer) %>%
+    drop_na(title_status) %>% 
+    drop_na(condition)
 ```
 
-Now that we have done a bit more clean up, lets get some summary stats for the manufacturers
+### Mainstream consumer automobiles
+
+The automotive domain is varied and diverse from the type of vehicles to the how
+pricing is calculated. There are several factors that make the valuation of an
+automobile very specialized. Some of these factors are
+- **Exotic Cars** - Exotic cars make a very small percentage of the market, but they are
+  priced significantly differently than their mainstream counterparts.
+- *Classic Cars* - Classic cars and Antique cars are also a specialized market, where
+  the valuation primarily depends on the appraisals and heritage. The ownership costs
+  of these vehicles are also significantly different. Most insurance companies 
+  consider vehicles more than 18 years of age to be categorized as classic.
+- *Custom Cars / Aftermarket customizations* - Custom built cars and heavy aftermarket
+  customization are cars that are not generally available, or have been modified 
+  significantly from their original specifiactions that they cannot be valuated 
+  using the manufacturer's soecifications.
+
+#### Rare and Exotic Automobiles
+A glance at the distribution of the population among the various manufacturers 
+indicate that some manufacturers have a very small presense in the market. 
+We may have too few observations from these manufacturers, in other words, these
+are rare values in the . Rare values can create bias in factor analysis and other 
+analyses, by appearing to be more important than they really are (Tuffrey). 
 ```{R}
-
 # clean manufacturers
-
-complete %>% group_by(manufacturer)%>%summarise(count = n())
-sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>1000)
-
-complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
-#complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% View
+manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
+manu_dist
+manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
+ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) +
+    geom_bar(stat="identity", width=1)
 ```
+
+We exclude the brands whose inventory make up less than 2% of the total market from
+the study, this excludes the exotic and rare automobiles.
+
+```{R}
+sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>(.02*nrow(complete)))
+
+manufacturer_filtered <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
+
+manu_dist <- manufacturer_filtered %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
+manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
+ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) +
+    geom_bar(stat="identity", width=1)
+```
+
+#### Classic, Antique and Collector Cars
+
+Classic, Antique and Collector Cars are valuated primarily 
+by appraisal of their condition by a third party, and such data is effectively 
+missing for us.
+http://www.vmrintl.com/exotics/articles/about-exotic-cars.html 
+
+For the study, I exclude the cars that fall in to this category by eliminating 
+the vehicles that are more than 20 years old.
+https://www.carinsurance.com/how-old-classic-car.aspx
+
+This step also converts the categorial variable `Year` in to a continuous variable
+`Age`. This removes the dependence of our model on the levels of the factor `Year`
+and makes it resuable. We also eliminate invalid values from our sample that list 
+vehicles that have a model year that has not been relesed yet (The most recent 
+model avaialble in October 2019 is the 2020 model year)
+
+```{R}
+year_dist <- manufacturer_filtered %>% group_by(year) %>% summarise(count = n()) %>% arrange(count)
+ggplot(data=year_dist,aes(x=year,y=count)) + geom_point()
+
+manufacturer_filtered$age <- with(manufacturer_filtered, 2020-year)
+age_filtered <- manufacturer_filtered %>% filter(age<=20 & age>=0)
+```
+
+The distribution of the new `age` varible is shown below.
+
+```{r}
+ggplot(data = age_filtered,aes(x=age))+geom_histogram( binwidth=1, fill="#69b3a2", color="#e9ecef", alpha=0.9)
+
+```
+
+### Understanding the Odometer distribution
+
+Univariate statistics of the odometer variable indicates that have a single influential
+outlier. This can be inferred from the fact that the third quantile and the Max 
+are several orders of magnitude different.
+
+```{R}
+summary(age_filtered$odometer)
+
+```
+
+Further inspection by discretizing the range of the odometer readings in to 10 
+equal intervals, we see that a single observarion is in the 10th interval and 
+every other observation being in the 1st interval clearly indicating that the 
+observationis anomalous. The value itself is 102,102,785 or 102 million miles.
+This value is so extreme that we can assume that its erroneous and a data entry 
+mistake - likely the user meant 102,785 and repeated the character sequence 102
+```{R}
+table(cut(age_filtered$odometer, breaks = 10))
+```
+From the data released by the Fedral Highway administration's office of 
+Highway policy Information, vehicles travel an average of 11,789 miles /year.
+https://www.fhwa.dot.gov/policyinformation/statistics/2017/vm1.cfm
+https://nepis.epa.gov/Exe/ZyPDF.cgi?Dockey=P100U8YT.pdf
+I am taking a more conservative estimate of 17,500 miles per year for a total of
+vehicles with less than 350,000 miles on it.
+
+
+I also exclude observations that have an odometer value of `0` unless its a new 
+vehicle. In most cases its not reasonable for an automobile to have a `0` 
+odometer value, unless its for a new vehicle and even then it would likely be 
+rounded to zero, as miles are registered on the vehicle from the vehicle assmebly
+line itself as part of the manufacturing process.
+The extreme observations are removed.
+
+```{R}
+quantile(age_filtered$odometer,probs = seq(0,1,.01))
+
+odo_filter_upper <- age_filtered %>% filter(odometer<=quantile(odometer,0.99))
+odo_filtered <- odo_filter_upper %>% 
+    filter(odometer >= quantile(odometer,0.02)  )
+    
+
+
+odo_dist<-odo_filtered %>%group_by(odometer) %>% summarise(count = n()) 
+ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point(aes(colour="#69b3a2"))
+```
+
+The distribution indicates that while some of the observations report very specific 
+mileage, other approximate or round off the mileage to a nearest number.
+this is a case where we can discretize the continuous variables to eliminate the
+variance caused by the reporting. A quick histograpm shows us the frequency 
+distribution of the variable values. We can see that automobiles with less than 150,000
+miles on the odometer are most common and beyond that the number of automobiles 
+on the market tapers off with increasing odometer readings. This pattern holds in 
+line with conventional knowledge about the lifespan of an automobile.
+```{R}
+hist(odo_filtered$odometer,col = "112")
+ggplot(data = odo_filtered,aes(x=odometer))+geom_histogram(binwidth=2500, fill="#69b3a2", color="#e9ecef", alpha=0.9)
+
+```
+As an initial strategy, I selct the bin sizes to reflect the industry practice, 
+with more bins for automobiles with lower mileage, and increading bin sizes in 
+proportion with their odometer values.
+
+```{R}
+odo_binned <- odo_filtered %>% mutate(mileage = cut(odometer, breaks = c(0,5000,15000,25000,35000,45000,60000,75000,90000,105000,125000,150000,200000,250000,275000))) 
+mileage_dist <- odo_binned %>% group_by(mileage) %>% summarise(count=n(),pr=median(price))
+```
+
+We can observe from the frequency distribution that as the odometer reading increases,
+there are more cars being brought to the market. The shading also indicates an 
+inverse relationship with between the odometer values and price.
+```{R}
+ggplot(data=mileage_dist,aes(x=mileage,y=count,fill=pr)) + geom_bar(stat="identity", width=1)
+```
+
 
 ### Understanding the Price distribution
+Understandig the Univariate and Multivariate statistics on the pricing hepls us 
+build statistical inferece of the distribution of pricing and visualize simple 
+hypothesis of association.
+
+#### Univariate statistics
+
+A quick glance at the univariate statistics of the price variable shows some 
+patterns. The histogram for the price seems to have concentrated the values in 
+to a single bucket. This is typically an idication that we may be dealing with 
+extreme values in our dataset. Breaking the price down to percentiles, we can
+clearly see that this is infact the case. The 99th and the 100th percentiles are 
+several orders of magnitude different.
+
+
 ```{R}
 # clean price
 
-#complete$price <-with(complete,as.numeric(as.character(price)))
-quantile(complete$price,probs = seq(0,1,.01))
-quantile(complete$price,.05)
-summary(complete$price)
-price_dist<-complete %>%filter(price< quantile(complete$price,.99)) %>% group_by(price) %>% summarise(count = n()) 
+#univariate statistics
+summary(odo_binned$price)
+# hsitogram
+hist(odo_binned$price)
+quantile(odo_binned$price,probs = seq(0,1,.01))
 ```
-Lets plot the distribution of the prices
+
+I eliminate these outliers that make up the 100th percentile. Plotting the 
+resulting distribution reveals more extreme values on the lower end.  
+
 ```{R}
+price_dist<-odo_binned %>%
+    filter(price<= quantile(complete$price,.99)) %>% 
+    group_by(price) %>% 
+    summarise(count = n()) 
 ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
 ```
-We can still see some of the extreme observations on te lower end. Specifically, there are many observations that have a `price` of `0`. These typically mean that the seller is trying to negotiate the best offer from potential buyers. We can see that upto the 10th percentile, the `price` is `0`. We are excluding these observations, as the price is not indicative of the actual expected sale price.
+
+We can still see some of the extreme observations on te lower end. Specifically,
+there are many observations that have a `price` of `0`. These typically mean that
+the seller is trying to negotiate the best offer from potential buyers. We can 
+see that upto the 10th percentile, the `price` is `0`. We are excluding these 
+observations, as the price is not indicative of the actual expected sale price.
 
 ```{r}
-price_dist<-complete %>%filter(price > quantile(complete$price,.1) & price < quantile(complete$price,.95)) %>% group_by(price) %>% summarise(count = n()) 
-ggplot(data=price_dist,aes(x=price,y=count)) + geom_point()
+price_filtered<-odo_binned %>% 
+    filter(price > 0) %>% 
+    filter(price >= quantile(odo_binned$price,.01) & price <= quantile(odo_binned$price,.99))
+ggplot(data = price_filtered,aes(x=price))+geom_histogram( binwidth=1000, fill="#69b3a2", color="#e9ecef", alpha=0.9)
+```
+
+```{r}
+price_dist<-price_filtered %>% 
+    group_by(price) %>% 
+    summarise(count = n()) 
+ggplot(data=price_dist,aes(x=price,y=count)) + geom_point(aes(colour=price, size=count))
 ```
 
 [ford]["https://www.ford.com"]

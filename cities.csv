@@ -1,0 +1,434 @@
+City,State,city_url
+auburn, al, https://auburn.craigslist.org
+birmingham, al, https://bham.craigslist.org
+dothan, al, https://dothan.craigslist.org
+florence / muscle shoals, al, https://shoals.craigslist.org
+gadsden-anniston, al, https://gadsden.craigslist.org
+huntsville / decatur, al, https://huntsville.craigslist.org
+mobile, al, https://mobile.craigslist.org
+montgomery, al, https://montgomery.craigslist.org
+tuscaloosa, al, https://tuscaloosa.craigslist.org
+anchorage / mat-su, ak, https://anchorage.craigslist.org
+fairbanks, ak, https://fairbanks.craigslist.org
+kenai peninsula, ak, https://kenai.craigslist.org
+southeast alaska, ak, https://juneau.craigslist.org
+flagstaff / sedona, az, https://flagstaff.craigslist.org
+mohave county, az, https://mohave.craigslist.org
+phoenix, az, https://phoenix.craigslist.org
+prescott, az, https://prescott.craigslist.org
+show low, az, https://showlow.craigslist.org
+sierra vista, az, https://sierravista.craigslist.org
+tucson, az, https://tucson.craigslist.org
+yuma, az, https://yuma.craigslist.org
+fayetteville, ar, https://fayar.craigslist.org
+fort smith, ar, https://fortsmith.craigslist.org
+jonesboro, ar, https://jonesboro.craigslist.org
+little rock, ar, https://littlerock.craigslist.org
+texarkana, ar, https://texarkana.craigslist.org
+bakersfield, ca, https://bakersfield.craigslist.org
+chico, ca, https://chico.craigslist.org
+fresno / madera, ca, https://fresno.craigslist.org
+gold country, ca, https://goldcountry.craigslist.org
+hanford-corcoran, ca, https://hanford.craigslist.org
+humboldt county, ca, https://humboldt.craigslist.org
+imperial county, ca, https://imperial.craigslist.org
+inland empire, ca, https://inlandempire.craigslist.org
+los angeles, ca, https://losangeles.craigslist.org
+mendocino county, ca, https://mendocino.craigslist.org
+merced, ca, https://merced.craigslist.org
+modesto, ca, https://modesto.craigslist.org
+monterey bay, ca, https://monterey.craigslist.org
+orange county, ca, https://orangecounty.craigslist.org
+palm springs, ca, https://palmsprings.craigslist.org
+redding, ca, https://redding.craigslist.org
+reno / tahoe, ca, https://reno.craigslist.org
+sacramento, ca, https://sacramento.craigslist.org
+san diego, ca, https://sandiego.craigslist.org
+san luis obispo, ca, https://slo.craigslist.org
+santa barbara, ca, https://santabarbara.craigslist.org
+santa maria, ca, https://santamaria.craigslist.org
+SF bay area, ca, https://sfbay.craigslist.org
+siskiyou county, ca, https://siskiyou.craigslist.org
+stockton, ca, https://stockton.craigslist.org
+susanville, ca, https://susanville.craigslist.org
+ventura county, ca, https://ventura.craigslist.org
+visalia-tulare, ca, https://visalia.craigslist.org
+yuba-sutter, ca, https://yubasutter.craigslist.org
+boulder, co, https://boulder.craigslist.org
+colorado springs, co, https://cosprings.craigslist.org
+denver, co, https://denver.craigslist.org
+eastern CO, co, https://eastco.craigslist.org
+fort collins / north CO, co, https://fortcollins.craigslist.org
+high rockies, co, https://rockies.craigslist.org
+pueblo, co, https://pueblo.craigslist.org
+western slope, co, https://westslope.craigslist.org
+eastern CT, ct, https://newlondon.craigslist.org
+hartford, ct, https://hartford.craigslist.org
+new haven, ct, https://newhaven.craigslist.org
+northwest CT, ct, https://nwct.craigslist.org
+fairfield county, ct,https://newyork.craigslist.org/fct/
+daytona beach, fl, https://daytona.craigslist.org
+florida keys, fl, https://keys.craigslist.org
+ft myers / SW florida, fl, https://fortmyers.craigslist.org
+gainesville, fl, https://gainesville.craigslist.org
+heartland florida, fl, https://cfl.craigslist.org
+jacksonville, fl, https://jacksonville.craigslist.org
+lakeland, fl, https://lakeland.craigslist.org
+north central FL, fl, https://lakecity.craigslist.org
+ocala, fl, https://ocala.craigslist.org
+okaloosa / walton, fl, https://okaloosa.craigslist.org
+orlando, fl, https://orlando.craigslist.org
+panama city, fl, https://panamacity.craigslist.org
+pensacola, fl, https://pensacola.craigslist.org
+sarasota-bradenton, fl, https://sarasota.craigslist.org
+south florida, fl, https://miami.craigslist.org
+space coast, fl, https://spacecoast.craigslist.org
+st augustine, fl, https://staugustine.craigslist.org
+tallahassee, fl, https://tallahassee.craigslist.org
+tampa bay area, fl, https://tampa.craigslist.org
+treasure coast, fl, https://treasure.craigslist.org
+albany, ga, https://albanyga.craigslist.org
+athens, ga, https://athensga.craigslist.org
+atlanta, ga, https://atlanta.craigslist.org
+augusta, ga, https://augusta.craigslist.org
+brunswick, ga, https://brunswick.craigslist.org
+columbus, ga, https://columbusga.craigslist.org
+macon / warner robins, ga, https://macon.craigslist.org
+northwest GA, ga, https://nwga.craigslist.org
+savannah / hinesville, ga, https://savannah.craigslist.org
+statesboro, ga, https://statesboro.craigslist.org
+valdosta, ga, https://valdosta.craigslist.org
+boise, id, https://boise.craigslist.org
+east idaho, id, https://eastidaho.craigslist.org
+lewiston / clarkston, id, https://lewiston.craigslist.org
+pullman / moscow, id, https://pullman.craigslist.org
+spokane / coeur d'alene, id, https://spokane.craigslist.org
+twin falls, id, https://twinfalls.craigslist.org
+bloomington-normal, il, https://bn.craigslist.org
+champaign urbana, il, https://chambana.craigslist.org
+chicago, il, https://chicago.craigslist.org
+decatur, il, https://decatur.craigslist.org
+la salle co, il, https://lasalle.craigslist.org
+mattoon-charleston, il, https://mattoon.craigslist.org
+peoria, il, https://peoria.craigslist.org
+quad cities, il, https://quadcities.craigslist.org
+rockford, il, https://rockford.craigslist.org
+southern illinois, il, https://carbondale.craigslist.org
+springfield, il, https://springfieldil.craigslist.org
+st louis,mo, https://stlouis.craigslist.org
+western IL, il, https://quincy.craigslist.org
+bloomington, in, https://bloomington.craigslist.org
+evansville, in, https://evansville.craigslist.org
+fort wayne, in, https://fortwayne.craigslist.org
+indianapolis, in, https://indianapolis.craigslist.org
+kokomo, in, https://kokomo.craigslist.org
+lafayette / west lafayette, in, https://tippecanoe.craigslist.org
+muncie / anderson, in, https://muncie.craigslist.org
+richmond, in, https://richmondin.craigslist.org
+south bend / michiana, in, https://southbend.craigslist.org
+terre haute, in, https://terrehaute.craigslist.org
+northwest indiana, in,https://chicago.craigslist.org/nwi/
+ames, ia, https://ames.craigslist.org
+cedar rapids, ia, https://cedarrapids.craigslist.org
+des moines, ia, https://desmoines.craigslist.org
+dubuque, ia, https://dubuque.craigslist.org
+fort dodge, ia, https://fortdodge.craigslist.org
+iowa city, ia, https://iowacity.craigslist.org
+mason city, ia, https://masoncity.craigslist.org
+omaha / council bluffs, ia, https://omaha.craigslist.org
+quad cities, il, https://quadcities.craigslist.org
+sioux city, ia, https://siouxcity.craigslist.org
+southeast IA, ia, https://ottumwa.craigslist.org
+waterloo / cedar falls, ia, https://waterloo.craigslist.org
+kansas city, mo, https://kansascity.craigslist.org
+lawrence, ks, https://lawrence.craigslist.org
+manhattan, ks, https://ksu.craigslist.org
+northwest KS, ks, https://nwks.craigslist.org
+salina, ks, https://salina.craigslist.org
+southeast KS, ks, https://seks.craigslist.org
+southwest KS, ks, https://swks.craigslist.org
+topeka, ks, https://topeka.craigslist.org
+wichita, ks, https://wichita.craigslist.org
+bowling green, ky, https://bgky.craigslist.org
+eastern kentucky, ky, https://eastky.craigslist.org
+huntington-ashland, ky, https://huntington.craigslist.org
+lexington, ky, https://lexington.craigslist.org
+louisville, ky, https://louisville.craigslist.org
+owensboro, ky, https://owensboro.craigslist.org
+western KY, ky, https://westky.craigslist.org
+baton rouge, la, https://batonrouge.craigslist.org
+central louisiana, la, https://cenla.craigslist.org
+houma, la, https://houma.craigslist.org
+lafayette, la, https://lafayette.craigslist.org
+lake charles, la, https://lakecharles.craigslist.org
+monroe, la, https://monroe.craigslist.org
+new orleans, la, https://neworleans.craigslist.org
+shreveport, la, https://shreveport.craigslist.org
+annapolis, md, https://annapolis.craigslist.org
+baltimore, md, https://baltimore.craigslist.org
+cumberland valley, md, https://chambersburg.craigslist.org
+eastern shore, md, https://easternshore.craigslist.org
+frederick, md, https://frederick.craigslist.org
+southern maryland, md, https://smd.craigslist.org
+western maryland, md, https://westmd.craigslist.org
+MD suburbs of DC, md,https://washingtondc.craigslist.org/mld/
+boston, ma, https://boston.craigslist.org
+cape cod / islands, ma, https://capecod.craigslist.org
+south coast, ma, https://southcoast.craigslist.org
+western massachusetts, ma, https://westernmass.craigslist.org
+worcester / central MA, ma, https://worcester.craigslist.org
+ann arbor, mi, https://annarbor.craigslist.org
+battle creek, mi, https://battlecreek.craigslist.org
+central michigan, mi, https://centralmich.craigslist.org
+detroit metro, mi, https://detroit.craigslist.org
+flint, mi, https://flint.craigslist.org
+grand rapids, mi, https://grandrapids.craigslist.org
+holland, mi, https://holland.craigslist.org
+jackson, mi, https://jxn.craigslist.org
+kalamazoo, mi, https://kalamazoo.craigslist.org
+lansing, mi, https://lansing.craigslist.org
+monroe, mi, https://monroemi.craigslist.org
+muskegon, mi, https://muskegon.craigslist.org
+northern michigan, mi, https://nmi.craigslist.org
+port huron, mi, https://porthuron.craigslist.org
+saginaw-midland-baycity, mi, https://saginaw.craigslist.org
+south bend / michiana, mi, https://southbend.craigslist.org
+southwest michigan, mi, https://swmi.craigslist.org
+the thumb, mi, https://thumb.craigslist.org
+upper peninsula, mi, https://up.craigslist.org
+bemidji, mn, https://bemidji.craigslist.org
+brainerd, mn, https://brainerd.craigslist.org
+duluth / superior, mn, https://duluth.craigslist.org
+fargo / moorhead, mn, https://fargo.craigslist.org
+mankato, mn, https://mankato.craigslist.org
+minneapolis / st paul, mn, https://minneapolis.craigslist.org
+rochester, mn, https://rmn.craigslist.org
+southwest MN, mn, https://marshall.craigslist.org
+st cloud, mn, https://stcloud.craigslist.org
+gulfport / biloxi, ms, https://gulfport.craigslist.org
+hattiesburg, ms, https://hattiesburg.craigslist.org
+jackson, ms, https://jackson.craigslist.org
+meridian, ms, https://meridian.craigslist.org
+north mississippi, ms, https://northmiss.craigslist.org
+southwest MS, ms, https://natchez.craigslist.org
+columbia / jeff city, mo, https://columbiamo.craigslist.org
+joplin, mo, https://joplin.craigslist.org
+kansas city, mo, https://kansascity.craigslist.org
+kirksville, mo, https://kirksville.craigslist.org
+lake of the ozarks, mo, https://loz.craigslist.org
+southeast missouri, mo, https://semo.craigslist.org
+springfield, mo, https://springfield.craigslist.org
+st joseph, mo, https://stjoseph.craigslist.org
+st louis, mo, https://stlouis.craigslist.org
+billings, mt, https://billings.craigslist.org
+bozeman, mt, https://bozeman.craigslist.org
+butte, mt, https://butte.craigslist.org
+eastern montana, mt, https://montana.craigslist.org
+great falls, mt, https://greatfalls.craigslist.org
+helena, mt, https://helena.craigslist.org
+kalispell, mt, https://kalispell.craigslist.org
+missoula, mt, https://missoula.craigslist.org
+asheville, nc, https://asheville.craigslist.org
+boone, nc, https://boone.craigslist.org
+charlotte, nc, https://charlotte.craigslist.org
+eastern NC, nc, https://eastnc.craigslist.org
+fayetteville, nc, https://fayetteville.craigslist.org
+greensboro, nc, https://greensboro.craigslist.org
+hickory / lenoir, nc, https://hickory.craigslist.org
+jacksonville, nc, https://onslow.craigslist.org
+outer banks, nc, https://outerbanks.craigslist.org
+raleigh / durham / CH, nc, https://raleigh.craigslist.org
+wilmington, nc, https://wilmington.craigslist.org
+winston-salem, nc, https://winstonsalem.craigslist.org
+grand island, ne, https://grandisland.craigslist.org
+lincoln, ne, https://lincoln.craigslist.org
+north platte, ne, https://northplatte.craigslist.org
+omaha / council bluffs, ne, https://omaha.craigslist.org
+scottsbluff / panhandle, ne, https://scottsbluff.craigslist.org
+sioux city, IA, https://siouxcity.craigslist.org
+elko, nv, https://elko.craigslist.org
+las vegas, nv, https://lasvegas.craigslist.org
+reno / tahoe, nv, https://reno.craigslist.org
+central NJ, nj, https://cnj.craigslist.org
+jersey shore, nj, https://jerseyshore.craigslist.org
+north jersey, nj, https://newjersey.craigslist.org
+south jersey, nj, https://southjersey.craigslist.org
+NJ suburbs of NYC, nj,https://newyork.craigslist.org/jsy/
+albuquerque, nm, https://albuquerque.craigslist.org
+clovis / portales, nm, https://clovis.craigslist.org
+farmington, nm, https://farmington.craigslist.org
+las cruces, nm, https://lascruces.craigslist.org
+roswell / carlsbad, nm, https://roswell.craigslist.org
+santa fe / taos, nm, https://santafe.craigslist.org
+albany, ny, https://albany.craigslist.org
+binghamton, ny, https://binghamton.craigslist.org
+buffalo, ny, https://buffalo.craigslist.org
+catskills, ny, https://catskills.craigslist.org
+chautauqua, ny, https://chautauqua.craigslist.org
+elmira-corning, ny, https://elmira.craigslist.org
+finger lakes, ny, https://fingerlakes.craigslist.org
+glens falls, ny, https://glensfalls.craigslist.org
+hudson valley, ny, https://hudsonvalley.craigslist.org
+ithaca, ny, https://ithaca.craigslist.org
+long island, ny, https://longisland.craigslist.org
+new york city, ny, https://newyork.craigslist.org
+oneonta, ny, https://oneonta.craigslist.org
+plattsburgh-adirondacks, ny, https://plattsburgh.craigslist.org
+potsdam-canton-massena, ny, https://potsdam.craigslist.org
+rochester, ny, https://rochester.craigslist.org
+syracuse, ny, https://syracuse.craigslist.org
+twin tiers NY/PA, ny, https://twintiers.craigslist.org
+utica-rome-oneida, ny, https://utica.craigslist.org
+watertown, ny, https://watertown.craigslist.org
+bismarck, nd, https://bismarck.craigslist.org
+fargo / moorhead, nd, https://fargo.craigslist.org
+grand forks, nd, https://grandforks.craigslist.org
+north dakota, nd, https://nd.craigslist.org
+akron / canton, oh, https://akroncanton.craigslist.org
+ashtabula, oh, https://ashtabula.craigslist.org
+athens, oh, https://athensohio.craigslist.org
+chillicothe, oh, https://chillicothe.craigslist.org
+cincinnati, oh, https://cincinnati.craigslist.org
+cleveland, oh, https://cleveland.craigslist.org
+columbus, oh, https://columbus.craigslist.org
+dayton / springfield, oh, https://dayton.craigslist.org
+huntington-ashland, oh, https://huntington.craigslist.org
+lima / findlay, oh, https://limaohio.craigslist.org
+mansfield, oh, https://mansfield.craigslist.org
+northern panhandle, oh, https://wheeling.craigslist.org
+parkersburg-marietta, oh, https://parkersburg.craigslist.org
+sandusky, oh, https://sandusky.craigslist.org
+toledo, oh, https://toledo.craigslist.org
+tuscarawas co, oh, https://tuscarawas.craigslist.org
+youngstown, oh, https://youngstown.craigslist.org
+zanesville / cambridge, oh, https://zanesville.craigslist.org
+fort smith, AR, https://fortsmith.craigslist.org
+lawton, ok, https://lawton.craigslist.org
+northwest OK, ok, https://enid.craigslist.org
+oklahoma city, ok, https://oklahomacity.craigslist.org
+stillwater, ok, https://stillwater.craigslist.org
+texoma, ok, https://texoma.craigslist.org
+tulsa, ok, https://tulsa.craigslist.org
+bend, or, https://bend.craigslist.org
+corvallis/albany, or, https://corvallis.craigslist.org
+east oregon, or, https://eastoregon.craigslist.org
+eugene, or, https://eugene.craigslist.org
+klamath falls, or, https://klamath.craigslist.org
+medford-ashland, or, https://medford.craigslist.org
+oregon coast, or, https://oregoncoast.craigslist.org
+portland, or, https://portland.craigslist.org
+roseburg, or, https://roseburg.craigslist.org
+salem, or, https://salem.craigslist.org
+altoona-johnstown, pa, https://altoona.craigslist.org
+cumberland valley, pa, https://chambersburg.craigslist.org
+erie, pa, https://erie.craigslist.org
+harrisburg, pa, https://harrisburg.craigslist.org
+lancaster, pa, https://lancaster.craigslist.org
+lehigh valley, pa, https://allentown.craigslist.org
+meadville, pa, https://meadville.craigslist.org
+philadelphia, pa, https://philadelphia.craigslist.org
+pittsburgh, pa, https://pittsburgh.craigslist.org
+poconos, pa, https://poconos.craigslist.org
+reading, pa, https://reading.craigslist.org
+scranton / wilkes-barre, pa, https://scranton.craigslist.org
+state college, pa, https://pennstate.craigslist.org
+twin tiers NY/PA, pa, https://twintiers.craigslist.org
+williamsport, pa, https://williamsport.craigslist.org
+york, pa, https://york.craigslist.org
+charleston, sc, https://charleston.craigslist.org
+columbia, sc, https://columbia.craigslist.org
+florence, sc, https://florencesc.craigslist.org
+greenville / upstate, sc, https://greenville.craigslist.org
+hilton head, sc, https://hiltonhead.craigslist.org
+myrtle beach, sc, https://myrtlebeach.craigslist.org
+northeast SD, sd, https://nesd.craigslist.org
+pierre / central SD, sd, https://csd.craigslist.org
+rapid city / west SD, sd, https://rapidcity.craigslist.org
+sioux falls / SE SD, sd, https://siouxfalls.craigslist.org
+south dakota, sd, https://sd.craigslist.org
+chattanooga, tn, https://chattanooga.craigslist.org
+clarksville, tn, https://clarksville.craigslist.org
+cookeville, tn, https://cookeville.craigslist.org
+jackson, tn, https://jacksontn.craigslist.org
+knoxville, tn, https://knoxville.craigslist.org
+memphis, tn, https://memphis.craigslist.org
+nashville, tn, https://nashville.craigslist.org
+tri-cities, tn, https://tricities.craigslist.org
+abilene, tx, https://abilene.craigslist.org
+amarillo, tx, https://amarillo.craigslist.org
+austin, tx, https://austin.craigslist.org
+beaumont / port arthur, tx, https://beaumont.craigslist.org
+brownsville, tx, https://brownsville.craigslist.org
+college station, tx, https://collegestation.craigslist.org
+corpus christi, tx, https://corpuschristi.craigslist.org
+dallas / fort worth, tx, https://dallas.craigslist.org
+deep east texas, tx, https://nacogdoches.craigslist.org
+del rio / eagle pass, tx, https://delrio.craigslist.org
+el paso, tx, https://elpaso.craigslist.org
+galveston, tx, https://galveston.craigslist.org
+houston, tx, https://houston.craigslist.org
+killeen / temple / ft hood, tx, https://killeen.craigslist.org
+laredo, tx, https://laredo.craigslist.org
+lubbock, tx, https://lubbock.craigslist.org
+mcallen / edinburg, tx, https://mcallen.craigslist.org
+odessa / midland, tx, https://odessa.craigslist.org
+san angelo, tx, https://sanangelo.craigslist.org
+san antonio, tx, https://sanantonio.craigslist.org
+san marcos, tx, https://sanmarcos.craigslist.org
+southwest TX, tx, https://bigbend.craigslist.org
+texarkana, tx, https://texarkana.craigslist.org
+texoma, tx, https://texoma.craigslist.org
+tyler / east TX, tx, https://easttexas.craigslist.org
+victoria, tx, https://victoriatx.craigslist.org
+waco, tx, https://waco.craigslist.org
+wichita falls, tx, https://wichitafalls.craigslist.org
+logan, ut, https://logan.craigslist.org
+ogden-clearfield, ut, https://ogden.craigslist.org
+provo / orem, ut, https://provo.craigslist.org
+salt lake city, ut, https://saltlakecity.craigslist.org
+st george, ut, https://stgeorge.craigslist.org
+charlottesville, va, https://charlottesville.craigslist.org
+danville, va, https://danville.craigslist.org
+eastern shore, va, https://easternshore.craigslist.org
+fredericksburg, va, https://fredericksburg.craigslist.org
+harrisonburg, va, https://harrisonburg.craigslist.org
+lynchburg, va, https://lynchburg.craigslist.org
+new river valley, va, https://blacksburg.craigslist.org
+norfolk / hampton roads, va, https://norfolk.craigslist.org
+richmond, va, https://richmond.craigslist.org
+roanoke, va, https://roanoke.craigslist.org
+southwest VA, va, https://swva.craigslist.org
+winchester, va, https://winchester.craigslist.org
+northern virginia, va, //washingtondc.craigslist.org/nva/
+bellingham, wa, https://bellingham.craigslist.org
+kennewick-pasco-richland, wa, https://kpr.craigslist.org
+lewiston / clarkston, wa, https://lewiston.craigslist.org
+moses lake, wa, https://moseslake.craigslist.org
+olympic peninsula, wa, https://olympic.craigslist.org
+pullman / moscow, wa, https://pullman.craigslist.org
+seattle-tacoma, wa, https://seattle.craigslist.org
+skagit / island / SJI, wa, https://skagit.craigslist.org
+spokane / coeur d'alene, wa, https://spokane.craigslist.org
+wenatchee, wa, https://wenatchee.craigslist.org
+yakima, wa, https://yakima.craigslist.org
+clark co / SW WA, wa,https://portland.craigslist.org/clk/
+charleston, wv, https://charlestonwv.craigslist.org
+eastern panhandle, wv, https://martinsburg.craigslist.org
+huntington-ashland, wv, https://huntington.craigslist.org
+morgantown, wv, https://morgantown.craigslist.org
+northern panhandle, wv, https://wheeling.craigslist.org
+parkersburg-marietta, wv, https://parkersburg.craigslist.org
+southern WV, wv, https://swv.craigslist.org
+west virginia (old), wv, https://wv.craigslist.org
+appleton-oshkosh-FDL, wi, https://appleton.craigslist.org
+duluth / superior, wi, https://duluth.craigslist.org
+eau claire, wi, https://eauclaire.craigslist.org
+green bay, wi, https://greenbay.craigslist.org
+janesville, wi, https://janesville.craigslist.org
+kenosha-racine, wi, https://racine.craigslist.org
+la crosse, wi, https://lacrosse.craigslist.org
+madison, wi, https://madison.craigslist.org
+milwaukee, wi, https://milwaukee.craigslist.org
+northern WI, wi, https://northernwi.craigslist.org
+sheboygan, wi, https://sheboygan.craigslist.org
+wausau, wi, https://wausau.craigslist.org
