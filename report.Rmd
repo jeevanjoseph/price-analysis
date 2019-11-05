@@ -236,12 +236,11 @@ hist(odo_filtered$odometer,col = "112")
 ggplot(data = odo_filtered,aes(x=odometer))+geom_histogram(binwidth=2500, fill="#69b3a2", color="#e9ecef", alpha=0.9)
 
 ```
-As an initial strategy, I selct the bin sizes to reflect the industry practice, 
-with more bins for automobiles with lower mileage, and increading bin sizes in 
-proportion with their odometer values.
+As an initial strategy, I select the bin sizes to split the dataset in to 20 bins,
+with approximately the same number of automobiles in every bin.
 
 ```{R}
-odo_binned <- odo_filtered %>% mutate(mileage = cut(odometer, breaks = c(0,5000,15000,25000,35000,45000,60000,75000,90000,105000,125000,150000,200000,250000,275000))) 
+odo_binned <- odo_filtered %>% mutate(mileage = cut(odometer, breaks = quantile(complete$odometer,probs = seq(0,1,.05)))) 
 mileage_dist <- odo_binned %>% group_by(mileage) %>% summarise(count=n(),pr=median(price))
 ```
 

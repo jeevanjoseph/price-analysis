@@ -5,6 +5,7 @@ library(dplyr)
 library(stringr)
 library(ggplot2)
 source("ford.R", local = TRUE)
+source("bmw.R", local = TRUE)
 
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
@@ -37,7 +38,7 @@ complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
 
 manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
 manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
-#ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
+ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
 
 
 # Clean Year
@@ -166,24 +167,20 @@ complete[] <- lapply(complete, function(x) if(is.factor(x)) factor(x) else x)
 complete$model <- c("")
 complete$trim <- c("")
 
+
+##############################################
 ## BMW
 
 bmw<-extract(complete[which(complete$manufacturer=="bmw"),],make,c("model","trim"),"(.*?series)(.*)",remove = FALSE)
 others <- complete[which(complete$manufacturer!="bmw"),]
 
+bmw %>% View
+
 for (row in 1:nrow(bmw)) {
     make <- bmw[row, "make"]
-    model_start = substr(make,1,1)
-    if(model_start == "1" || model_start == "3" ||model_start == "5" ||model_start == "7" ) {
-        bmw[row, "model"]<- paste(model_start,"series")
-    }
-    else if(model_start == "m" || model_start == "x" ||model_start == "z") {
-        ## for X and M models, model will be X{num}.
-        ## whatever follows is used as a trim - will need more work to reduce the levels here.
-        bmw[row, "model"] = substr(gsub("(x|m)[ \\-]?([0-9]+)","\\1\\2",make),1,2)
-        bmw[row, "trim"] = substr(gsub("(x|m)[ \\-]?([0-9]+)","\\1\\2",make),4,nchar(gsub("(x|m)[ \\-]?([0-9]+)","\\1\\2",make)))
-    }
+    model <- bmw_models(make)
     
+    bmw[row, "model"] = model
     ## Collapse 3-Series and 3 Series in to a single level 
     bmw[row, "model"] = gsub("-"," ",bmw[row, "model"])
 }
@@ -817,7 +814,7 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 cor(complete$price,complete$paint_color)
 
 summary(ford)
-linearMod <- lm(price ~ age*mileage*model+trim+title_status+condition, data=ford) 
+linearMod <- lm(price ~ age*mileage*model+trim+title_status+condition, data=bmw) 
 summary(linearMod)
 
 #bigmod <- linearMod
