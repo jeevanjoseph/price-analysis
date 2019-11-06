@@ -7,6 +7,7 @@ library(ggplot2)
 source("ford.R", local = TRUE)
 source("bmw.R", local = TRUE)
 source("toyota.R", local = TRUE)
+source("chevy.R", local = TRUE)
 
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
@@ -263,16 +264,39 @@ toyota[] <- lapply(toyota, function(x) if(is.factor(x)) factor(x) else x)
 ## extract chevrolet make in to model and trim based on the spacing. @todo cleanup the spacing 
 chevrolet <- complete[which(complete$manufacturer=="chevrolet"),]
 
+
 for (row in 1:nrow(chevrolet)) {
     make <- chevrolet[row, "make"]
+    model <- chevy_models(make)
+    trim  <- chevy_trims(make,model)
+    
+
+    chevrolet[row, "model"] = model
+    
+    if(trim == ""){
+        chevrolet[row, "trim"] = NA
+    }else{
+        chevrolet[row, "trim"] = trim
+    }
     # Collapse 3-Series and 3 Series in to a single level 
-    chevrolet[row, "model"] = gsub("(.*)?[ ](.*)?","\\1",make,ignore.case = TRUE)
-    chevrolet[row, "trim"] = gsub("(.*)?[ ](.*)?","\\2",make,ignore.case = TRUE)
+    #chevrolet[row, "model"] = gsub("(.*)?[ ](.*)?","\\1",make,ignore.case = TRUE)
+    #chevrolet[row, "trim"] = gsub("(.*)?[ ](.*)?","\\2",make,ignore.case = TRUE)
 }
 
-chevrolet$model<-factor(chevrolet$model)
-chevrolet$trim<-chevrolet(acura$trim)
+
+#chevrolet <- drop_na(chevrolet,model)
+#droplevels.factor(chevrolet$model)
+
+
+
+
 levels(chevrolet$model)
+sig_models<-chevrolet %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=50)
+chevrolet <- chevrolet %>% filter(model %in% sig_models$model) %>% filter(trim %in% sig_models$trim)
+chevrolet$model<-factor(chevrolet$model)
+chevrolet$trim<-factor(chevrolet$trim)
+droplevels.factor(chevrolet$model)
+chevrolet[] <- lapply(chevrolet, function(x) if(is.factor(x)) factor(x) else x)
 
 ### buick
 
@@ -811,7 +835,7 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 cor(complete$price,complete$paint_color)
 
 trainingset <- rbind(toyota, bmw, ford)
-linearMod <- lm(price ~ manufacturer+age*mileage*model+trim+title_status+condition, data=trainingset) 
+linearMod <- lm(price ~ age*mileage*model+trim+title_status+condition, data=chevrolet) 
 summary(linearMod)
 
 #bigmod <- linearMod
