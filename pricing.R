@@ -6,6 +6,7 @@ library(stringr)
 library(ggplot2)
 source("ford.R", local = TRUE)
 source("bmw.R", local = TRUE)
+source("toyota.R", local = TRUE)
 
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
@@ -172,7 +173,6 @@ complete$trim <- c("")
 ## BMW
 
 bmw<-extract(complete[which(complete$manufacturer=="bmw"),],make,c("model","trim"),"(.*?series)(.*)",remove = FALSE)
-others <- complete[which(complete$manufacturer!="bmw"),]
 
 bmw %>% View
 
@@ -192,34 +192,24 @@ levels(bmw$model)
 ### ford
 
 ## extract ford make in to model and trim based on the spacing. @todo cleanup the spacing 
-ford <- others[which(others$manufacturer=="ford"),]
-others <- others[which(others$manufacturer!="ford"),]
+ford <- complete[which(complete$manufacturer=="ford"),]
 nrow(ford)
 for (row in 1:nrow(ford)) {
     make <- ford[row, "make"]
-    # Collapse 3-Series and 3 Series in to a single level 
     model <- ford_models(make)
     trim  <- ford_trims(make,model)    
-    
-    
     if(model == ""){
         ford[row, "model"] = NA
     }else{
         ford[row, "model"] = model
     }
-    
     if(trim == ""){
         ford[row, "trim"] = NA
     }else{
         ford[row, "trim"] = trim
     }
-    
 }
 nrow(ford)
-ford$model<-factor(ford$model)
-ford$trim<-factor(ford$trim)
-ford[] <- lapply(ford, function(x) if(is.factor(x)) factor(x) else x)
-
 ford <- drop_na(ford,model)
 droplevels.factor(ford$model)
 levels(ford$model)
@@ -231,40 +221,47 @@ nrow(ford %>% filter(is.na(model)))
 ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(trim) %>% summarise(count = n()) %>% View
 
 ford <- ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim)
+ford$model<-factor(ford$model)
+ford$trim<-factor(ford$trim)
+ford[] <- lapply(ford, function(x) if(is.factor(x)) factor(x) else x)
 
 ### Toyota
 
 ## extract toyota make in to model and trim based on the spacing. @todo cleanup the spacing 
-toyota <- extract(others[which(others$manufacturer=="toyota"),],make,c("model","trim"),"([a-zA-Z0-9]*)[ ]?(.*)?",remove = FALSE)
-others <- others[which(others$manufacturer!="toyota"),]
-toyota$model<-factor(toyota$model)
-toyota$trim<-factor(toyota$trim)
-levels(toyota$model)
+toyota <- extract(complete[which(complete$manufacturer=="toyota"),],make,c("model","trim"),"([a-zA-Z0-9]*)[ ]?(.*)?",remove = FALSE)
 
-
-### acura
-
-## extract acura make in to model and trim based on the spacing. @todo cleanup the spacing 
-acura <- others[which(others$manufacturer=="acura"),]
-others <- others[which(others$manufacturer!="acura"),]
-
-for (row in 1:nrow(acura)) {
-    make <- acura[row, "make"]
-    # Collapse 3-Series and 3 Series in to a single level 
-    acura[row, "model"] = gsub("(.*)?(tsx|mdx|rdx|ilx|mds|pilot|rlx|rsx|tls|tsx|tlx|zdx|cl|rl|tl)(.*)?","\\2",make,ignore.case = TRUE)
-    acura[row, "trim"] = gsub(acura[row, "model"],"",make,ignore.case = TRUE)
+for (row in 1:nrow(toyota)) {
+    make <- toyota[row, "make"]
+    model <- toyota_models(make)
+    trim  <- toyota_trims(make,model)    
+    toyota[row, "model"] = model
+    if(trim == ""){
+        toyota[row, "trim"] = NA
+    }else{
+        toyota[row, "trim"] = trim
+    }
 }
 
-acura$model<-factor(acura$model)
-acura$trim<-factor(acura$trim)
-levels(acura$model)
+nrow(toyota)
+toyota <- drop_na(toyota,model)
+droplevels.factor(toyota$model)
+levels(toyota$model)
+valid_models <- toyota %>% group_by(model) %>% summarise(count = n()) %>% filter(count > 10)
+valid_trims <- toyota %>% group_by(trim) %>% summarise(count = n()) %>% filter(count>10)
 
+nrow(toyota %>% filter(is.na(model)))
+
+toyota %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(trim) %>% summarise(count = n()) %>% View
+
+toyota <- toyota %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim)
+toyota$model<-factor(toyota$model)
+toyota$trim<-factor(toyota$trim)
+toyota[] <- lapply(toyota, function(x) if(is.factor(x)) factor(x) else x)
 
 ### chevrolet
 
 ## extract chevrolet make in to model and trim based on the spacing. @todo cleanup the spacing 
-chevrolet <- others[which(others$manufacturer=="chevrolet"),]
-others <- others[which(others$manufacturer!="chevrolet"),]
+chevrolet <- complete[which(complete$manufacturer=="chevrolet"),]
 
 for (row in 1:nrow(chevrolet)) {
     make <- chevrolet[row, "make"]
@@ -796,7 +793,7 @@ ford %>%
 
 
 
-rbind(toyota, honda, hyundai,ford) %>% group_by(manufacturer,age) %>% summarise(median_price = log(median(price[age>=0 && age<=18])), cnt = n()) %>% ggplot( aes(x=age, y=cnt)) + geom_point(aes(col=manufacturer)) + geom_smooth(method="lm")
+rbind(toyota, bmw,ford) %>% group_by(manufacturer,age) %>% summarise(median_price = log(median(price[age>=0 && age<=18])), cnt = n()) %>% ggplot( aes(x=age, y=cnt)) + geom_point(aes(col=manufacturer)) + geom_smooth(method="lm")
 
 ggplot(data=ford, aes(x=age, y=price)) + geom_point(aes(col=model)) + geom_smooth(method="lm")
 ggplot(data=ford, aes(y=price, x=state)) + 
@@ -813,8 +810,8 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 
 cor(complete$price,complete$paint_color)
 
-summary(ford)
-linearMod <- lm(price ~ age*mileage*model+trim+title_status+condition, data=bmw) 
+trainingset <- rbind(toyota, bmw, ford)
+linearMod <- lm(price ~ manufacturer+age*mileage*model+trim+title_status+condition, data=trainingset) 
 summary(linearMod)
 
 #bigmod <- linearMod
