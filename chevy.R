@@ -5,6 +5,11 @@ chevy_models <- function(make){
        grepl("avalanche",make,ignore.case = TRUE) ||
        grepl("avalance",make,ignore.case = TRUE) ){
         model = "Avalanche"
+    }else if(grepl("bus",make,ignore.case = TRUE)||
+             grepl("express",make,ignore.case = TRUE)||
+             grepl("kodiak",make,ignore.case = TRUE)||
+             grepl("g4500",make,ignore.case = TRUE) ){
+        model = "express"
     }else if(grepl("aveo",make,ignore.case = TRUE)||
              grepl("aveo5",make,ignore.case = TRUE)||
              grepl("aveo5lt",make,ignore.case = TRUE) ){

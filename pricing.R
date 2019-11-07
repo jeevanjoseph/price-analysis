@@ -13,6 +13,7 @@ source("chevy.R", local = TRUE)
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
 cities <- distinct(cities,city_url,.keep_all = TRUE)
+modelTypes <- read_csv("model-types.csv")
 
 #plot(as.numeric(data$year),as.numeric(data$odometer))
 
@@ -223,6 +224,24 @@ levels(bmw$model)
 
 sig_bmw <- bmw %>% group_by(model,trim) %>% summarise(count = n())  %>% filter(count > 10)
 bmw <- bmw %>% filter(model %in% sig_bmw$model) %>% filter(trim %in% sig_bmw$trim)
+
+
+bmw$type <- as.character(bmw$type)
+bmw$size <- as.character(bmw$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    bmw$type[bmw$model == name ] <- body_type
+    bmw$size[bmw$model == name ] <- body_size
+}
+
+bmw$type <- factor(unlist(bmw$type))
+bmw$size <- factor(unlist(bmw$size))
+
+
+
 ### ford
 
 ## extract ford make in to model and trim based on the spacing. @todo cleanup the spacing 
@@ -256,6 +275,23 @@ ford <- ford %>% filter(model %in% sig_ford$model) %>% filter(trim %in% sig_ford
 ford$model<-factor(ford$model)
 ford$trim<-factor(ford$trim)
 ford[] <- lapply(ford, function(x) if(is.factor(x)) factor(x) else x)
+
+## Ford Consumer Auto
+ford_c <- ford %>% filter(!model %in% c("e-150","e-250","e-350","e-450","e-series","econoline","t-150","t-250","t-350","transit","lcf"))
+ford_c$type <- as.character(ford_c$type)
+ford_c$size <- as.character(ford_c$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    ford_c$type[ford_c$model == name ] <- body_type
+    ford_c$size[ford_c$model == name ] <- body_size
+}
+
+ford_c$type <- factor(unlist(ford_c$type))
+ford_c$size <- factor(unlist(ford_c$size))
+
 
 ### Toyota
 
@@ -292,6 +328,21 @@ toyota <- toyota %>% filter(model %in% sig_toyota$model) %>% filter(trim %in% si
 toyota$model<-factor(toyota$model)
 toyota$trim<-factor(toyota$trim)
 toyota[] <- lapply(toyota, function(x) if(is.factor(x)) factor(x) else x)
+
+toyota$type <- as.character(toyota$type)
+toyota$size <- as.character(toyota$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    toyota$type[toyota$model == name ] <- body_type
+    toyota$size[toyota$model == name ] <- body_size
+}
+
+toyota$type <- factor(unlist(toyota$type))
+toyota$size <- factor(unlist(toyota$size))
+
 
 ### chevrolet
 
@@ -335,7 +386,24 @@ chevrolet$model<-factor(chevrolet$model)
 chevrolet$trim<-factor(chevrolet$trim)
 droplevels.factor(chevrolet$model)
 chevrolet[] <- lapply(chevrolet, function(x) if(is.factor(x)) factor(x) else x)
-hist(chevrolet$price)
+
+
+## Chevy Consumer Auto
+chevy_c <- chevrolet %>% filter(!model %in% c("Astrovan","express")) %>% filter(!type %in% c("van"))
+chevy_c$type <- as.character(chevy_c$type)
+chevy_c$size <- as.character(chevy_c$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    chevy_c$type[chevy_c$model == name ] <- body_type
+    chevy_c$size[chevy_c$model == name ] <- body_size
+}
+
+chevy_c$type <- factor(unlist(chevy_c$type))
+chevy_c$size <- factor(unlist(chevy_c$size))
+
 
 
 ######################################################
@@ -384,6 +452,11 @@ summary(linearMod)
 linearMod <- lm(price ~age + model + mileage + condition + trim + age:model + 
                     age:mileage +model:mileage, data=sample) 
 summary(linearMod)
+
+## Model 3
+bm_mod <- lm(price ~age*mileage*type*size+condition+title_status, data=chevy_c) 
+summary(bm_mod)
+plot(bm_mod)
 
 
 

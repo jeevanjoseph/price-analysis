@@ -1,0 +1,93 @@
+model_name,body_type,size
+1series,coupe,sub-compact
+2series,coupe,sub-compact
+3series,sedan,compact
+4series,coupe,compact
+5series,sedan,mid-size
+6series,GT,mid-size
+7series,sedan,full-size
+8series,GT,full-size
+b7,performance,full-size
+i3,SUV,sub-compact
+i8,sports car,roadster
+m2,performance,sub-compact
+m3,performance,compact
+m4,performance,compact
+m5,performance,mid-size
+m6,performance,mid-size
+x1,SUV,sub-compact
+x3,SUV,compact
+x4,SUV,compact
+x5,SUV,mid-size
+x6,SUV,mid-size
+z3,performance,roadster
+z4,performance,roadster
+4 Runner,SUV,mid-size
+Avalon,sedan,full-size
+Camry,sedan,mid-size
+Corolla,sedan,compact
+FJ Cruiser,SUV,mid-size
+Highlander,SUV,mid-size
+Land Cruiser ,SUV,full-size
+Matrix  ,hatchback,compact
+Prius,hatchback,mid-size
+Sequoia,SUV,full-size
+Sienna,mini-van,full-size
+Solara,convertible,mid-size
+Tacoma,truck,mid-size
+Tundra,truck,full-size
+Venza,hatchback,mid-size
+Yaris,coupe,sub-compact
+500,sedan,full-size
+C-Max,hatchback,compact
+crown,sedan,full-size
+edge,SUV,mid-size
+escape,SUV,compact
+excursion,SUV,full-size
+explorer,SUV,mid-size
+f-150,truck,mid-size
+f-250,truck,mid-size
+f-350      ,truck,full-size
+f-450,truck,full-size
+f-550,truck,full-size
+f-650,truck,full-size
+f-750,truck,full-size
+fiesta,hatchback,sub-compact
+five,sedan,full-size
+flex,SUV,full-size
+focus,sedan,compact
+freestar,mini-van,full-size
+freestyle,SUV,full-size
+fusion,sedan,mid-size
+Mustang,coupe,roadster
+ranger,truck,mid-size
+thunderbird ,sports car,roadster
+windstar,mini-van,full-size
+Avalanche,truck,full-size
+Aveo,hatchback,sub-compact
+Camaro,coupe,mid-size
+Cavalier,sedan,compact
+Cobalt,sedan,compact
+colorado,truck,mid-size
+Corvette,sports car,roadster
+Cruze,sedan,compact
+Equinox,SUV,mid-size
+hhr,sedan,compact
+Impala,sedan,full-size
+Malibu,sedan,mid-size
+Montecarlo,coupe,full-size
+s10,truck,compact
+Silverado,truck,full-size
+Silverado1500,truck,full-size
+Silverado2500,truck,full-size
+Silverado3500,truck,full-size
+Silverado4500,truck,full-size
+sonic,hatchback,sub-compact
+spark,hatchback,sub-compact
+Suburban,SUV,full-size
+tahoe,SUV,full-size
+Trailblazer,SUV,mid-size
+Traverse,SUV,mid-size
+trax,SUV,sub-compact
+uplander,mini-van,full-size
+volt,sedan,compact
