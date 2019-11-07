@@ -4,6 +4,7 @@ library(readr)
 library(dplyr)
 library(stringr)
 library(ggplot2)
+library(MASS)
 source("ford.R", local = TRUE)
 source("bmw.R", local = TRUE)
 source("toyota.R", local = TRUE)
@@ -12,22 +13,37 @@ source("chevy.R", local = TRUE)
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
 cities <- distinct(cities,city_url,.keep_all = TRUE)
-summary(data);
+
 #plot(as.numeric(data$year),as.numeric(data$odometer))
-levels(data$type)
-summary(data$type)
-data %>%group_by(manufacturer)%>%summarise(count = n()) %>% View
 
+#data %>%group_by(manufacturer)%>%summarise(count = n()) %>% View
 
-source("ford.R", local = TRUE)
+data$manufacturer <- factor(data$manufacturer)
+data$condition <- factor(data$condition)
+data$title_status <- factor(data$title_status)
+data$type <- factor(data$type)
+data$size <- factor(data$size)
+data$fuel <- factor(data$fuel)
+data$cylinders <- factor(data$cylinders)
+data$transmission <- factor(data$transmission)
+data$paint_color <- factor(data$paint_color)
+data$drive <- factor(data$drive)
+
+summary(data);
+
 #complete <- data[complete.cases(data),]
 complete <- data %>%  
     drop_na(odometer) %>%
     drop_na(year) %>%
-    drop_na(make) %>%
+    drop_na(cylinders) %>%
     drop_na(manufacturer) %>%
     drop_na(title_status) %>% 
-    drop_na(condition)
+    drop_na(condition) %>%
+    drop_na(fuel) %>%
+    drop_na(transmission) %>%
+    drop_na(paint_color) %>%
+    drop_na(drive) %>%
+    drop_na(make)
 
 # clean manufacturers
 manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
@@ -40,12 +56,12 @@ complete <- complete %>% filter(manufacturer %in% sig_manu$manufacturer)
 
 manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
 manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
-ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
+#ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
 
 
 # Clean Year
 year_dist <- complete %>% group_by(year) %>% summarise(count = n()) %>% arrange(count)
-ggplot(data=year_dist,aes(x=year,y=count)) + geom_point()
+#ggplot(data=year_dist,aes(x=year,y=count)) + geom_point()
 
 complete$age <- with(complete, 2020-year)
 complete <- complete %>% filter(age<=20 & age>=0)
@@ -83,7 +99,9 @@ complete <- complete %>%
 quantile(complete$odometer,probs = seq(0,1,.01))
 
 odo_dist<-complete %>%group_by(odometer) %>% summarise(count = n()) 
-ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point()
+#ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point()
+
+
 # the distribution indiacts that while some of the observations report very specific mileage,
 # other approximate or round off the mileage to a nearest number.
 # this is a case where we can discretize the valriables in to constant sized bins.
@@ -99,7 +117,6 @@ ggplot(data=mileage_dist,aes(x=mileage,y=count,fill=pr)) + geom_bar(stat="identi
 
 # clean price
 
-complete%>%filter(price==NA)
 #complete$price <-with(complete,as.numeric(as.character(price)))
 quantile(complete$price,probs = seq(0,1,.01))
 quantile(complete$price,.05)
@@ -113,7 +130,7 @@ price_dist<-complete %>%
 ggplot(data=price_dist,aes(x=price_bin,y=count)) + geom_bar(stat="identity", width=1)
 
 complete <- complete %>% filter(price > 0)
-complete <- complete %>% filter(price<= quantile(complete$price,.99) & price>= quantile(complete$price,.02) )
+complete <- complete %>% filter(price<= quantile(complete$price,.98) & price>= quantile(complete$price,.02) )
 
 summary(complete$price)
 hist(complete$price)
@@ -175,13 +192,27 @@ complete$trim <- c("")
 
 bmw<-extract(complete[which(complete$manufacturer=="bmw"),],make,c("model","trim"),"(.*?series)(.*)",remove = FALSE)
 
-bmw %>% View
+#bmw %>% View
 
 for (row in 1:nrow(bmw)) {
     make <- bmw[row, "make"]
     model <- bmw_models(make)
+    trim <- bmw_trims(make,model)
     
-    bmw[row, "model"] = model
+    if(is.na(model) || model == ""){
+        bmw[row, "model"] = NA
+    }else{
+        model = gsub("-","",model)
+        model = gsub(" ","",model)
+        bmw[row, "model"] = model
+    }
+    if(is.na(trim)||trim == ""){
+        bmw[row, "trim"] = NA
+    }else{
+        bmw[row, "trim"] = trim
+    }
+    
+    
     ## Collapse 3-Series and 3 Series in to a single level 
     bmw[row, "model"] = gsub("-"," ",bmw[row, "model"])
 }
@@ -190,6 +221,8 @@ bmw$model<-factor(bmw$model)
 bmw$trim<-factor(bmw$trim)
 levels(bmw$model)
 
+sig_bmw <- bmw %>% group_by(model,trim) %>% summarise(count = n())  %>% filter(count > 10)
+bmw <- bmw %>% filter(model %in% sig_bmw$model) %>% filter(trim %in% sig_bmw$trim)
 ### ford
 
 ## extract ford make in to model and trim based on the spacing. @todo cleanup the spacing 
@@ -199,12 +232,12 @@ for (row in 1:nrow(ford)) {
     make <- ford[row, "make"]
     model <- ford_models(make)
     trim  <- ford_trims(make,model)    
-    if(model == ""){
+    if(is.na(model) || model == ""){
         ford[row, "model"] = NA
     }else{
         ford[row, "model"] = model
     }
-    if(trim == ""){
+    if(is.na(trim)||trim == ""){
         ford[row, "trim"] = NA
     }else{
         ford[row, "trim"] = trim
@@ -214,14 +247,12 @@ nrow(ford)
 ford <- drop_na(ford,model)
 droplevels.factor(ford$model)
 levels(ford$model)
-valid_models <- ford %>% group_by(model) %>% summarise(count = n()) %>% filter(count > 10)
-valid_trims <- ford %>% group_by(trim) %>% summarise(count = n()) %>% filter(count>10)
+sig_ford <- ford %>% group_by(model,trim) %>% summarise(count = n()) %>% filter(count > 10)
 
 nrow(ford %>% filter(is.na(model)))
 
-ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(trim) %>% summarise(count = n()) %>% View
 
-ford <- ford %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim)
+ford <- ford %>% filter(model %in% sig_ford$model) %>% filter(trim %in% sig_ford$trim)
 ford$model<-factor(ford$model)
 ford$trim<-factor(ford$trim)
 ford[] <- lapply(ford, function(x) if(is.factor(x)) factor(x) else x)
@@ -235,7 +266,11 @@ for (row in 1:nrow(toyota)) {
     make <- toyota[row, "make"]
     model <- toyota_models(make)
     trim  <- toyota_trims(make,model)    
-    toyota[row, "model"] = model
+    if(is.na(model) || model == ""){
+        toyota[row, "model"] = NA
+    }else{
+        toyota[row, "model"] = model
+    }
     if(trim == ""){
         toyota[row, "trim"] = NA
     }else{
@@ -247,14 +282,13 @@ nrow(toyota)
 toyota <- drop_na(toyota,model)
 droplevels.factor(toyota$model)
 levels(toyota$model)
-valid_models <- toyota %>% group_by(model) %>% summarise(count = n()) %>% filter(count > 10)
-valid_trims <- toyota %>% group_by(trim) %>% summarise(count = n()) %>% filter(count>10)
+sig_toyota <- toyota %>% group_by(model,trim) %>% summarise(count = n()) %>% filter(count > 10)
 
 nrow(toyota %>% filter(is.na(model)))
 
-toyota %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(trim) %>% summarise(count = n()) %>% View
+#toyota %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim) %>% group_by(trim) %>% summarise(count = n()) %>% View
 
-toyota <- toyota %>% filter(model %in% valid_models$model) %>% filter(trim %in% valid_trims$trim)
+toyota <- toyota %>% filter(model %in% sig_toyota$model) %>% filter(trim %in% sig_toyota$trim)
 toyota$model<-factor(toyota$model)
 toyota$trim<-factor(toyota$trim)
 toyota[] <- lapply(toyota, function(x) if(is.factor(x)) factor(x) else x)
@@ -271,7 +305,11 @@ for (row in 1:nrow(chevrolet)) {
     trim  <- chevy_trims(make,model)
     
 
-    chevrolet[row, "model"] = model
+    if(is.na(model) || model == ""){
+        chevrolet[row, "model"] = NA
+    }else{
+        chevrolet[row, "model"] = model
+    }
     
     if(trim == ""){
         chevrolet[row, "trim"] = NA
@@ -291,12 +329,70 @@ for (row in 1:nrow(chevrolet)) {
 
 
 levels(chevrolet$model)
-sig_models<-chevrolet %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=50)
+sig_chevy<-chevrolet %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=10)
 chevrolet <- chevrolet %>% filter(model %in% sig_models$model) %>% filter(trim %in% sig_models$trim)
 chevrolet$model<-factor(chevrolet$model)
 chevrolet$trim<-factor(chevrolet$trim)
 droplevels.factor(chevrolet$model)
 chevrolet[] <- lapply(chevrolet, function(x) if(is.factor(x)) factor(x) else x)
+hist(chevrolet$price)
+
+
+######################################################
+##############   VALIDATON
+######################################################
+
+
+trainingset <- rbind(toyota, bmw, ford, chevrolet)
+comp_set <- trainingset %>% dplyr::select(price,manufacturer,model,trim,condition,cylinders,fuel,odometer,title_status,transmission,drive,size,paint_color,age,mileage,type)
+
+comp_set$manufacturer <- factor(comp_set$manufacturer)
+comp_set$condition <- factor(comp_set$condition)
+comp_set$title_status <- factor(comp_set$title_status)
+comp_set$type <- factor(comp_set$type)
+comp_set$size <- factor(comp_set$size)
+comp_set$fuel <- factor(comp_set$fuel)
+comp_set$cylinders <- factor(comp_set$cylinders)
+summary(comp_set)
+
+
+comp_set %>% filter(age<2) %>% View
+
+ggplot(data=comp_set,aes(x=size,y=price,fill=size)) + geom_bar(stat="identity", width=1)
+
+sample <- comp_set %>% sample_n(10000)
+
+sample %>% group_by(manufacturer) %>% summarise(count = n()) %>% View
+
+linearMod <- lm(price ~age*model*mileage+condition+trim+title_status+cylinders+drive+size, data=sample) 
+summary(linearMod)
+#plot(linearMod)
+
+## VAriable selection by AIC
+step <- stepAIC(linearMod, scope=list(upper= ~., lower= ~1),direction = "both",trace=10)
+#bigmod <- linearMod
+summary(step)
+step$anova
+plot(step)
+
+##Model 1
+linearMod <- lm(price ~age + model + mileage + condition + trim + age:model + 
+                    age:mileage + model:mileage + age:model:mileage, data=sample) 
+summary(linearMod)
+
+## Model 2
+linearMod <- lm(price ~age + model + mileage + condition + trim + age:model + 
+                    age:mileage +model:mileage, data=sample) 
+summary(linearMod)
+
+
+
+######################################################
+##############  END  VALIDATON
+######################################################
+
+
+
 
 ### buick
 
@@ -368,6 +464,7 @@ chrysler$model<-factor(chrysler$model)
 chrysler$trim<-factor(chrysler$trim)
 levels(chrysler$model)
 
+hist(chevrolet$price)
 
 ### dodge
 
@@ -834,10 +931,24 @@ scatter.smooth(x=complete$age, y=complete$price,main="Dist ~ Speed")
 
 cor(complete$price,complete$paint_color)
 
-trainingset <- rbind(toyota, bmw, ford)
-linearMod <- lm(price ~ age*mileage*model+trim+title_status+condition, data=chevrolet) 
-summary(linearMod)
+trainingset <- rbind(toyota, bmw, ford, chevrolet)
+comp_set <- trainingset[complete.cases(trainingset),]
 
+comp_set$manufacturer <- factor(comp_set$manufacturer)
+comp_set$condition <- factor(comp_set$condition)
+comp_set$title_status <- factor(comp_set$title_status)
+comp_set$type <- factor(comp_set$type)
+comp_set$size <- factor(comp_set$size)
+comp_set$fuel <- factor(comp_set$fuel)
+comp_set$cylinders <- factor(comp_set$cylinders)
+summary(comp_set)
+
+linearMod <- lm(price ~ manufacturer+age+mileage+model+trim+title_status+condition, data=comp_set) 
+summary(linearMod)
+#plot(linearMod)
+
+## VAriable selection by AIC
+step <- stepAIC(linearMod, scope=list(upper= ~manufacturer*age*mileage*model*trim*title_status*condition, lower= ~manufacturer+age+mileage+model+trim))
 #bigmod <- linearMod
 
 residual <- resid(linearMod)

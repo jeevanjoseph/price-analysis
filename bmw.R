@@ -34,58 +34,38 @@ bmw_trims <- function(make,model){
     if(grepl(" ",make)){
         trim = gsub(".*[ ](.*)?","\\1",make,ignore.case = TRUE)
     }else{
-        trim = gsub(".*[ ](.*)?","\\1",paste(make,"base",sep = " "),ignore.case = TRUE)
-    }
-    if(grepl("limit",make,ignore.case = TRUE) || 
-       grepl("ltd",make,ignore.case = TRUE) ){
-        trim = "Limited"
-    }else if(grepl("platinum",make,ignore.case = TRUE) ){
-        trim = "Platinum"
-    }else if(grepl("xlt",make,ignore.case = TRUE) ){
-        trim = "XLT"
-    }else if(grepl("lariat",make,ignore.case = TRUE) ){
-        trim = "Lariat"
-    }else if(grepl("king",make,ignore.case = TRUE) ){
-        trim = "King Ranch"
-    }else if(grepl("se",make,ignore.case = TRUE) ){
-        trim = "SE"
-    }else if(grepl("sel",make,ignore.case = TRUE) ){
-        trim = "SEL"
-    }else if(grepl("titanium",make,ignore.case = TRUE)){
-        trim = "Titanium"
-    } else if(grepl("xls",make,ignore.case = TRUE)){
-        trim = "XLS"
-    }else if(grepl("shelby",make,ignore.case = TRUE)){
-        trim = "Shelby"
-    }else if(grepl("xl",make,ignore.case = TRUE)){
-        trim = "XL"
-    }else if(grepl("lx",make,ignore.case = TRUE)){
-        trim = "LX"
-    }else if(grepl("eddie",make,ignore.case = TRUE)){
-        trim = "Eddie Bauer"
-    }else if(grepl("4x4",make,ignore.case = TRUE)){
-        trim = "4x4"
-    }else if(grepl("fx4",make,ignore.case = TRUE)){
-        trim = "FX4"
-    }else if(grepl("fx2",make,ignore.case = TRUE)){
-        trim = "FX2"
-    }else if(grepl("sport",make,ignore.case = TRUE)){
-        trim = "Sport"
-    }else if(grepl("gt",make,ignore.case = TRUE)){
-        trim = "GT"
-    }else if(grepl("zx2",make,ignore.case = TRUE)){
-        trim = "ZX2"
-    }else if(grepl("ZX3",make,ignore.case = TRUE)){
-        trim = "ZX3"
-    }else if(grepl("svt",make,ignore.case = TRUE)){
-        trim = "SVT"
-    }else if(grepl("sd",make,ignore.case = TRUE) ||
-             grepl("super duty",make,ignore.case = TRUE)){
-        trim = "Super Duty"
-    }else if(grepl("150",make,ignore.case = TRUE)||
-             grepl("250",make,ignore.case = TRUE)||
-             grepl("350",make,ignore.case = TRUE)){
         trim = "base"
+    }
+    if(grepl("320 ?-?i",make,ignore.case = TRUE)){
+        trim = "320i"
+    }else if(grepl("330 ?-?i",make,ignore.case = TRUE) ){
+        trim = "330i"
+    }else if(grepl("328 ?-?d",make,ignore.case = TRUE) ){
+        trim = "328d"
+    }else if(grepl("330 ?-?e",make,ignore.case = TRUE) ){
+        trim = "330e"
+    }else if(grepl("340 ?-?i",make,ignore.case = TRUE) ){
+        trim = "340i"
+    }else if(grepl("430 ?-?i",make,ignore.case = TRUE) ){
+        trim = "430i"
+    }else if(grepl("440 ?-?i",make,ignore.case = TRUE) ){
+        trim = "440i"
+    }else if(grepl("530 ?-?e",make,ignore.case = TRUE) ){
+        trim = "530e"
+    }else if(grepl("540 ?-?i",make,ignore.case = TRUE) ){
+        trim = "540i"
+    }else if(grepl("540 ?-?d",make,ignore.case = TRUE) ){
+        trim = "540d"
+    }else if(grepl("550 ?-?i",make,ignore.case = TRUE) ){
+        trim = "550i"
+    }else if(grepl("740 ?-?i",make,ignore.case = TRUE) ){
+        trim = "740i"
+    }else if(grepl("740 ?-?e",make,ignore.case = TRUE) ){
+        trim = "740e"
+    }else if(grepl("750 ?-?i",make,ignore.case = TRUE) ){
+        trim = "750i"
+    }else if(grepl("760 ?-?i",make,ignore.case = TRUE) ){
+        trim = "760i"
     }
     
     return(trim);
