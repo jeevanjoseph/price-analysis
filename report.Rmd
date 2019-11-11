@@ -11,27 +11,78 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Abstract
 
-In this paper, I study classified adverisement data to build a reusable statistical
-model for price prediction of automobiles. Teh data set is cleaned and filtered to 
-limit the study to main stream consumer automobiles. The industry's reliance on 
-proprietary databases and the lack of transparency around the currently avaialable
-valuation models provide motivation to build an open data model for valuation.
-Such a model will be free from any potential conflicts of interests, and will be 
-fully transparent.
+In this paper, I study classified adverisement data to build reusable statistical
+models for performing price prediction or valuation of automobiles. I use two 
+different approaches in building the models. The first is a Multiple Linear Regression, 
+which belongs to a class of models knowd as Generalized Linear Models (GLM/GLIM)
+and is a common and popular choice for modelling linear relationships, when the 
+model assumptions are met.The second approach is to use Gradient Boosting Machine(GBM).
+GBM is a method that vastly improves on a simple decision tree, by building an 
+ensemble of decision trees, where each tree attempts to correct the mispredictions
+of all previous trees. The approaches are evalualted for thier efficiency on 
+large datasets and accuracy.
 
-In this paper, I use the dataset that collects classified advertisements from 
-the website craigslist.org. I prepare the data for analysis, perform exploratory 
-analysis, and finally build a reusable predictive model. 
+I use a open dataset that is comprised of classified advertisements 
+from the website craigslist.org obtained through web scraping. The data set is 
+cleaned and filtered to limit the study to main stream consumer automobiles. 
+I prepare the data for analysis, perform exploratory analysis, and finally build 
+reusable predictive models using both MLR and GBM techniques and compare the results. 
+
+
+## Introduction
+
+The automotive segment is dominated by dealers and middlemen who often inflate 
+pricing and make it difficult to understand the true market worth of an automobile. 
+There are proprietary databases in the domain, however they use closed data 
+sources and provide little transparency. These proprietary databases also provide
+valuations to indivudials while using the same tools and data to power trade-in 
+and auction platforms for dealers (Kelley Blue Book Inc.). 
+
+The automotive industry's reliance on proprietary databases and the lack of transparency 
+around the currently avaialable valuation models provide motivation 
+to build an open data model for valuation. Such a model will be free from any 
+potential conflicts of interests, and will be fully transparent.
 
 
 ## Research Question
-Can we build a resusable statistical model to perform automobile valuations based purely on open data ?
+Can we build a resusable statistical model to perform automobile valuations 
+based purely on open data ?
 
-The automotive segment is dominated by
-dealers and middlemen who often inflate pricing and make it difficult to understand 
-the true market worth of an automobile. There are proprietary databases in the 
-domain, however they use closed data sources and monetize the database to provide
-sales tools for dealerships which make them less transparent (Kelley Blue Book Inc.). 
+When building a prediction or classification model, the prediction performance is 
+the most important factor. I believe that the performance and effciency of training
+a model is equally important. To this end I use two different approaches in builing
+predictive models and compare those models. The two approaches used are Multiple
+Linear Regression and Gradient Boosting Machine.
+
+Multiple linear regression (MLR) is a parametric method that attempts to model 
+the relationship between two or more explanatory variables and a response variable 
+by fitting a linear equation to observed data. In the least-squares model, the 
+best-fitting line for the observed data is calculated by minimizing the sum of 
+the squares of the vertical deviations from each data  point to the line. 
+MLR is a popular and classical method to model linear relationships,however it's 
+effectiveness and applicability depends on the assumptions that it makes about 
+the input dataset, like the predictors having strong linear realtionships
+to the response variable, absense of multi-collinearity or auto-correlation in 
+the data. Heteroscedasticity and the presense of influential outliers can also 
+result in lesser predictive accuracy or biased predictions.
+
+Gradient boosting is a non-parametric method that is based on the concept of a 
+decision tree. Decision trees themselves generally have rather poor predictive 
+power, and generally a tree with a very large number of splits is needed to reach 
+an acceptable predictive accuracy. However they do have a number of desirable 
+qualities like thier ability to handle large datasets, mixed predictors, missing
+data, and redundant variable. The decision tree is improved by methods like boosting, 
+where the approach is to fit many trees to re-weighted versions of the training 
+data. Gradient boosting is an algorithm that works with a loss functions, including 
+regression models. Gradient boosting builds decision trees from the training data 
+drawing samples with replacement. Each subsequent tree that is built models the 
+residuals of all the previous trees. This method keeps the favorable aspects of 
+decision trees while it improves the predictive power of the model.
+
+Both models are compared with the same dataset as well and the results are presented.
+
+In this study, I use open market data obtained from the classifieds website
+craigslist.org and build a prediction model based on this data. 
 
 This study is aimed at creating a valuation model based on open-data from classified
 advertisements. Studies have shown that users prefer third party price evaluations
@@ -67,6 +118,9 @@ be useful in the subsequent analysis.
 Now we load the data. The data load uses the `read_csv` function from the `dplyr` package.
 ```{R}
 data <- read_csv("craigslistVehicles_semi.csv");
+cities <- read_csv("cities.csv");
+cities <- distinct(cities,city_url,.keep_all = TRUE)
+modelTypes <- read_csv("model-types.csv")
 ```
 
 
@@ -75,6 +129,16 @@ the data needs to be cleaned, as several features the set have missing values, a
 the univariate statistics for the numeric data shows the existence of extreme values.
 
 ```{R}
+data$manufacturer <- factor(data$manufacturer)
+data$condition <- factor(data$condition)
+data$title_status <- factor(data$title_status)
+data$type <- factor(data$type)
+data$size <- factor(data$size)
+data$fuel <- factor(data$fuel)
+data$cylinders <- factor(data$cylinders)
+data$transmission <- factor(data$transmission)
+data$paint_color <- factor(data$paint_color)
+data$drive <- factor(data$drive)
 summary(data);
 #plot(as.numeric(data$year),as.numeric(data$odometer))
 #levels(data$type)
@@ -88,14 +152,41 @@ We can see from the summary that we have observations in our dataset that are in
 We have missing and extreme values for several variables, and we shall remove 
 these incomplete observations.
 ```{R}
-#complete <- data[complete.cases(data),]
 complete <- data %>%  
     drop_na(odometer) %>%
     drop_na(year) %>%
-    drop_na(make) %>%
+    drop_na(cylinders) %>%
     drop_na(manufacturer) %>%
     drop_na(title_status) %>% 
-    drop_na(condition)
+    drop_na(condition) %>%
+    drop_na(fuel) %>%
+    drop_na(transmission) %>%
+    drop_na(paint_color) %>%
+    drop_na(drive) %>%
+    drop_na(make)
+
+```
+
+#### Remove duplicate listings
+
+A vehicle identification number (VIN) is a unique code, including a serial number, 
+used by the automotive industry to identify individual motor vehicles, 
+towed vehicles, motorcycles, scooters and mopeds, as defined in ISO 3779 
+(content and structure) and ISO 4030 (location and attachment). (https://vpic.nhtsa.dot.gov/)
+
+We can check for an remove duplicates by using the VIN number, in cases where it
+is provided. We exclude the cases where VIN number is missing, as we cannot be 
+sure if the classifieds are for the same automobile, so as to minimize autocollinearity
+in the data we use for model building.
+
+```{r}
+no_vin <- complete %>% filter(is.na(VIN))
+
+no_dupe_vin <- complete %>% filter(!is.na(VIN)) %>% distinct(VIN,.keep_all = TRUE)
+
+valid_vin <- no_dupe_vin  %>% filter(str_length(stri_enc_toutf8(VIN))==17)
+
+complete <- valid_vin
 ```
 
 ### Mainstream consumer automobiles

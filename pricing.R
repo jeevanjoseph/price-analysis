@@ -9,6 +9,8 @@ source("ford.R", local = TRUE)
 source("bmw.R", local = TRUE)
 source("toyota.R", local = TRUE)
 source("chevy.R", local = TRUE)
+source("honda.R", local = TRUE)
+source("nissan.R", local = TRUE)
 
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
@@ -46,10 +48,21 @@ complete <- data %>%
     drop_na(drive) %>%
     drop_na(make)
 
+
+### Deleet Duplicate VIN Numbers
+
+no_vin <- complete %>% filter(is.na(VIN))
+
+no_dupe_vin <- complete %>% filter(!is.na(VIN)) %>% distinct(VIN,.keep_all = TRUE)
+
+valid_vin <- no_dupe_vin  %>% filter(str_length(stri_enc_toutf8(VIN))==17)
+
+complete <- valid_vin
+
 # clean manufacturers
 manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
 manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
-#ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
+ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
 
 sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>(.02*nrow(complete)))
 
@@ -367,29 +380,26 @@ for (row in 1:nrow(chevrolet)) {
     }else{
         chevrolet[row, "trim"] = trim
     }
-    # Collapse 3-Series and 3 Series in to a single level 
-    #chevrolet[row, "model"] = gsub("(.*)?[ ](.*)?","\\1",make,ignore.case = TRUE)
-    #chevrolet[row, "trim"] = gsub("(.*)?[ ](.*)?","\\2",make,ignore.case = TRUE)
+   
 }
 
+## Identify outliers and models and trims with too few samples
+sig_chevy<-chevrolet %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=25)
 
-#chevrolet <- drop_na(chevrolet,model)
-#droplevels.factor(chevrolet$model)
+## exclude the rare observations
+chevrolet <- chevrolet %>% filter(model %in% sig_chevy$model) %>% filter(trim %in% sig_chevy$trim)
 
-
-
-
-levels(chevrolet$model)
-sig_chevy<-chevrolet %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=10)
-chevrolet <- chevrolet %>% filter(model %in% sig_models$model) %>% filter(trim %in% sig_models$trim)
+## Re evaluate the factors
 chevrolet$model<-factor(chevrolet$model)
 chevrolet$trim<-factor(chevrolet$trim)
 droplevels.factor(chevrolet$model)
 chevrolet[] <- lapply(chevrolet, function(x) if(is.factor(x)) factor(x) else x)
 
 
-## Chevy Consumer Auto
+## limit the dataset Chevy Consumer Auto
 chevy_c <- chevrolet %>% filter(!model %in% c("Astrovan","express")) %>% filter(!type %in% c("van"))
+
+## Factor reduction by business rules - based on model types.
 chevy_c$type <- as.character(chevy_c$type)
 chevy_c$size <- as.character(chevy_c$size)
 for (row in 1:nrow(modelTypes)){
@@ -406,13 +416,136 @@ chevy_c$size <- factor(unlist(chevy_c$size))
 
 
 
+### honda
+
+## extract honda make in to model and trim based on the spacing. @todo cleanup the spacing 
+honda <- complete[which(complete$manufacturer=="honda"),]
+
+for (row in 1:nrow(honda)) {
+    make <- honda[row, "make"]
+    model <- honda_models(make)
+    trim  <- honda_trims(make,model)
+    
+    
+    if(is.na(model) || model == ""){
+        honda[row, "model"] = NA
+    }else{
+        honda[row, "model"] = model
+    }
+    
+    if(trim == ""){
+        honda[row, "trim"] = NA
+    }else{
+        honda[row, "trim"] = trim
+    }
+    
+}
+
+## Identify outliers and models and trims with too few samples
+sig_honda<-honda %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=10)
+## exclude the rare observations
+honda <- honda %>% filter(model %in% sig_honda$model) %>% filter(trim %in% sig_honda$trim)
+
+## Re evaluate the factors
+honda$model<-factor(honda$model)
+honda$trim<-factor(honda$trim)
+droplevels.factor(honda$model)
+honda[] <- lapply(honda, function(x) if(is.factor(x)) factor(x) else x)
+
+
+## limit the dataset Chevy Consumer Auto
+#chevy_c <- chevrolet %>% filter(!model %in% c("Astrovan","express")) %>% filter(!type %in% c("van"))
+
+## Factor reduction by business rules - based on model types.
+honda$type <- as.character(honda$type)
+honda$size <- as.character(honda$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    honda$type[honda$model == name ] <- body_type
+    honda$size[honda$model == name ] <- body_size
+}
+
+honda$type <- factor(unlist(honda$type))
+honda$size <- factor(unlist(honda$size))
+
+
+
+### nissan
+
+## extract nissan make in to model and trim based on the spacing. @todo cleanup the spacing 
+nissan <- complete[which(complete$manufacturer=="nissan"),]
+
+for (row in 1:nrow(nissan)) {
+    make <- nissan[row, "make"]
+    model <- nissan_models(make)
+    trim  <- nissan_trims(make,model)
+    
+    
+    if(is.na(model) || model == ""){
+        nissan[row, "model"] = NA
+    }else{
+        nissan[row, "model"] = model
+    }
+    
+    if(trim == ""){
+        nissan[row, "trim"] = NA
+    }else{
+        nissan[row, "trim"] = trim
+    }
+    
+    
+    # Collapse 3-Series and 3 Series in to a single level 
+    #nissan[row, "model"] = gsub("(.*)?[ ](.*)?","\\1",make,ignore.case = TRUE)
+    #nissan[row, "trim"] = gsub("(.*)?[ ](.*)?","\\2",make,ignore.case = TRUE)
+}
+
+## Identify outliers and models and trims with too few samples
+sig_nissan<-nissan %>% group_by(model,trim) %>% summarise(count=n()) %>% filter(count>=10)
+## exclude the rare observations
+nissan <- nissan %>% filter(model %in% sig_nissan$model) %>% filter(trim %in% sig_nissan$trim)
+
+## Re evaluate the factors
+nissan$model<-factor(nissan$model)
+nissan$trim<-factor(nissan$trim)
+droplevels.factor(nissan$model)
+nissan[] <- lapply(nissan, function(x) if(is.factor(x)) factor(x) else x)
+
+nissan$model<-factor(nissan$model)
+nissan$trim<-factor(nissan$trim)
+levels(nissan$model)
+
+## limit the dataset Chevy Consumer Auto
+nissan_c <- nissan %>% filter(!grepl("nv",model,ignore.case = TRUE))
+
+## Factor reduction by business rules - based on model types.
+nissan_c$type <- as.character(nissan_c$type)
+nissan_c$size <- as.character(nissan_c$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    nissan_c$type[nissan_c$model == name ] <- body_type
+    nissan_c$size[nissan_c$model == name ] <- body_size
+}
+
+nissan_c$type <- factor(unlist(nissan_c$type))
+nissan_c$size <- factor(unlist(nissan_c$size))
+
+
+
+
 ######################################################
 ##############   VALIDATON
 ######################################################
 
-
-trainingset <- rbind(toyota, bmw, ford, chevrolet)
-comp_set <- trainingset %>% dplyr::select(price,manufacturer,model,trim,condition,cylinders,fuel,odometer,title_status,transmission,drive,size,paint_color,age,mileage,type)
+trainingset <- rbind(nissan_c,toyota)
+trainingset <- rbind(toyota, bmw, ford_c, chevy_c,honda,nissan_c)
+trainingset$logPrice <- log(trainingset$price)
+comp_set <- trainingset %>% dplyr::select(price,logPrice,manufacturer,model,trim,condition,cylinders,fuel,odometer,title_status,transmission,drive,size,paint_color,age,mileage,type)
 
 comp_set$manufacturer <- factor(comp_set$manufacturer)
 comp_set$condition <- factor(comp_set$condition)
@@ -423,18 +556,19 @@ comp_set$fuel <- factor(comp_set$fuel)
 comp_set$cylinders <- factor(comp_set$cylinders)
 summary(comp_set)
 
+comp_set %>% write_csv("clean_dataset_logp.csv")
 
 comp_set %>% filter(age<2) %>% View
 
 ggplot(data=comp_set,aes(x=size,y=price,fill=size)) + geom_bar(stat="identity", width=1)
 
-sample <- comp_set %>% sample_n(10000)
+sample <- comp_set %>% sample_n(500)
 
 sample %>% group_by(manufacturer) %>% summarise(count = n()) %>% View
 
-linearMod <- lm(price ~age*model*mileage+condition+trim+title_status+cylinders+drive+size, data=sample) 
+linearMod <- lm(logPrice ~age*mileage*cylinders+model:mileage+model:age+condition+trim+title_status+drive+size, data=comp_set) 
 summary(linearMod)
-#plot(linearMod)
+plot(linearMod)
 
 ## VAriable selection by AIC
 step <- stepAIC(linearMod, scope=list(upper= ~., lower= ~1),direction = "both",trace=10)
@@ -454,9 +588,22 @@ linearMod <- lm(price ~age + model + mileage + condition + trim + age:model +
 summary(linearMod)
 
 ## Model 3
-bm_mod <- lm(price ~age*mileage*type*size+condition+title_status, data=chevy_c) 
+bm_mod <- lm(price ~age*mileage*type*size+condition+title_status, data=honda) 
 summary(bm_mod)
 plot(bm_mod)
+
+
+## Model 4
+# 
+linearMod <- lm(price ~age*mileage*cylinders+model+model:condition+model:mileage+model:age+condition+trim+title_status+drive+size, data=comp_set)
+summary(linearMod)
+##### Stepwise selection
+
+## Model 3
+init_mod <- lm(price ~., data=sample) 
+step <- stepAIC(init_mod, scope= .~.^2, direction = "both",trace=10)
+summary(step)
+
 
 
 
@@ -575,22 +722,6 @@ gmc$trim<-factor(gmc$trim)
 levels(gmc$model)
 
 
-### honda
-
-## extract honda make in to model and trim based on the spacing. @todo cleanup the spacing 
-honda <- others[which(others$manufacturer=="honda"),]
-others <- others[which(others$manufacturer!="honda"),]
-
-for (row in 1:nrow(honda)) {
-    make <- honda[row, "make"]
-    # Collapse 3-Series and 3 Series in to a single level 
-    honda[row, "model"] = gsub("(.*)?[ ](.*)?","\\1",make,ignore.case = TRUE)
-    honda[row, "trim"] = gsub("(.*)?[ ](.*)?","\\2",make,ignore.case = TRUE)
-}
-
-honda$model<-factor(honda$model)
-honda$trim<-factor(honda$trim)
-levels(honda$model)
 
 
 ### hyundai

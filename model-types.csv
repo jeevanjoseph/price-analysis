@@ -78,10 +78,10 @@ Malibu,sedan,mid-size
 Montecarlo,coupe,full-size
 s10,truck,compact
 Silverado,truck,full-size
-Silverado1500,truck,full-size
-Silverado2500,truck,full-size
-Silverado3500,truck,full-size
-Silverado4500,truck,full-size
+Silverado 1500,truck,full-size
+Silverado 2500,truck,full-size
+Silverado 3500,truck,full-size
+Silverado 4500,truck,full-size
 sonic,hatchback,sub-compact
 spark,hatchback,sub-compact
 Suburban,SUV,full-size
@@ -91,3 +91,35 @@ Traverse,SUV,mid-size
 trax,SUV,sub-compact
 uplander,mini-van,full-size
 volt,sedan,compact
+Accord,sedan,mid-size
+Civic,sedan,compact
+CR-V,SUV,mid-size
+CR-Z,hatchback,compact
+crosstour,hatchback,mid-size
+Element,suv,compact
+Fit,hatchback,sub-compact
+HR-V,SUV,sub-compact
+insight,sedan,compact
+Odessey  ,mini-van,full-size
+Passport,SUV,mid-size
+Pilot,SUV,full-size
+Ridgeline,truck,mid-size
+S 2000,sports car,roadster
+Altima,sedan,mid-size
+Armada,SUV,full-size
+cube,hatchback,sub-compact
+Frontier,truck,mid-size
+Juke,SUV,sub-compact
+Leaf,hatchback,compact
+maxima,sedan,full-size
+Murano,SUV,mid-size
+Pathfinder,SUV,mid-size
+Quest,mini-van,full-size
+Rogue,SUV,compact
+Sentra,sedan,compact
+Titan,truck,full-size
+versa,sedan,sub-compact
+X-Terra,SUV,compact
+Z-350,sports car,roadster
+Z-370,sports car,roadster
+z,sports car,roadster
