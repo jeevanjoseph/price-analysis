@@ -1,12 +1,14 @@
 ---
 title: "Statistical Predictive Model for Automobile Pricing"
-output: html_document
-editor_options: 
+output:
+  word_document: default
+  html_document: default
+editor_options:
   chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE)
+knitr::opts_chunk$set(echo = TRUE, warning=FALSE, message = FALSE)
 ```
 
 ## Abstract
@@ -94,20 +96,58 @@ free of any conflicts of interest.
 ### Setup
 
 First we ensure that the required packages for our analysis are installed.
-```{r}
+```{r setup-pkg, echo=TRUE}
 #install.packages("tidyverse")
+#install.packages("naniar")
+#install.packages("e1071")
+library(e1071)
 library(tidyr)
 library(readr)
 library(dplyr)
+library(stringr)
+library(stringi)
 library(ggplot2)
+library(MASS)
+library(naniar)
 source("ford.R", local = TRUE)
+source("bmw.R", local = TRUE)
+source("toyota.R", local = TRUE)
+source("chevy.R", local = TRUE)
+source("honda.R", local = TRUE)
+source("nissan.R", local = TRUE)
 ```
 
+## Data Gathering
 
-## Exploratory Data analysis
+ The craigslist dataset contains approximately 550,000 observations, and the relevant 
+ attributes of each classified advertisement such as the price, year, manufacturer, 
+ condition, title status and 15 other features. In total, there are 21 features in 
+ each observation. This study divides the data into 1 dependent variable (price) 
+ and 20 independent variables. The data set is openly avaialble on kaggle.
+```
+https://www.kaggle.com/austinreese/craigslist-carstrucks-data
+```
+The dependent variable, price, is a quantitative variable. Of the independent dependent
+variables, there are 19 qualitative variables and 1 quantitative variable.
+
+This dataset in enhanced with automobile make and model information from Wikipedia,
+to form a normalized mapping from consumer automobile nameplates to thier respective
+automobile class and size. This mapping contains the following attributes.
+
+Craigslist does not list their classifieds on the basis of cities and states. 
+They use an intuitive method to keep classifieds local to an area, and in the 
+case of sparsely populated areas, the locality can sometime be as coarse granined
+as the state itself. To address this by providing normalized geographical data featues, 
+a supplemantary map of the geographical information is also created. This is done by modifiying 
+the original source code for the webscraper, and scraping all the craigslist local 
+pages and extracting a mapping to the geographical information. Craigslist can also 
+list pages that are in another state if it borders a location, and these listings 
+are accounted for in the mapping as well.
+
+## Data Preparation and Exploratory Data analysis
 
 The first step in any investigation of data is to examine the univariate statistics
-of the variables in the dataset. we load and summarize the data to develop a better 
+of the variables in the dataset. We load and summarize the data to develop a better 
 understanding of the distribution and detect any anomalies such as extreme and 
 abberant values. This also helps us get an idea of some orders of magnitude 
 (such as the average ages, prices, mileage of the automobile listings) which will
@@ -116,7 +156,7 @@ be useful in the subsequent analysis.
 ### Loading the data
 
 Now we load the data. The data load uses the `read_csv` function from the `dplyr` package.
-```{R}
+```{R dataload}
 data <- read_csv("craigslistVehicles_semi.csv");
 cities <- read_csv("cities.csv");
 cities <- distinct(cities,city_url,.keep_all = TRUE)
@@ -128,7 +168,7 @@ Lets quickly summarise the data that was loaded. From the summary we can see tha
 the data needs to be cleaned, as several features the set have missing values, and 
 the univariate statistics for the numeric data shows the existence of extreme values.
 
-```{R}
+```{R factorize}
 data$manufacturer <- factor(data$manufacturer)
 data$condition <- factor(data$condition)
 data$title_status <- factor(data$title_status)
@@ -140,18 +180,24 @@ data$transmission <- factor(data$transmission)
 data$paint_color <- factor(data$paint_color)
 data$drive <- factor(data$drive)
 summary(data);
-#plot(as.numeric(data$year),as.numeric(data$odometer))
-#levels(data$type)
-#summary(data$type)
-#data %>%group_by(type)%>%summarise(count = n()) %>% View
 ```
 
+### Missing Data 
+
+The summary shows that we have missing values in quite a few features. In order 
+to build a better understanding of the missing values, we can plot them.
+
+```{r plot_missing}
+gg_miss_var(data, show_pct = TRUE)
+#vis_miss(data, warn_large_data = FALSE)
+```
 ### Remove incomplete observations from the dataset
 
 We can see from the summary that we have observations in our dataset that are incomplete. 
 We have missing and extreme values for several variables, and we shall remove 
 these incomplete observations.
-```{R}
+
+```{R remove_incomplete}
 complete <- data %>%  
     drop_na(odometer) %>%
     drop_na(year) %>%
@@ -179,7 +225,7 @@ is provided. We exclude the cases where VIN number is missing, as we cannot be
 sure if the classifieds are for the same automobile, so as to minimize autocollinearity
 in the data we use for model building.
 
-```{r}
+```{r remove_dupes}
 no_vin <- complete %>% filter(is.na(VIN))
 
 no_dupe_vin <- complete %>% filter(!is.na(VIN)) %>% distinct(VIN,.keep_all = TRUE)
@@ -211,7 +257,8 @@ indicate that some manufacturers have a very small presense in the market.
 We may have too few observations from these manufacturers, in other words, these
 are rare values in the . Rare values can create bias in factor analysis and other 
 analyses, by appearing to be more important than they really are (Tuffrey). 
-```{R}
+
+```{R significant_manufacturers}
 # clean manufacturers
 manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
 manu_dist
@@ -290,16 +337,9 @@ From the data released by the Fedral Highway administration's office of
 Highway policy Information, vehicles travel an average of 11,789 miles /year.
 https://www.fhwa.dot.gov/policyinformation/statistics/2017/vm1.cfm
 https://nepis.epa.gov/Exe/ZyPDF.cgi?Dockey=P100U8YT.pdf
-I am taking a more conservative estimate of 17,500 miles per year for a total of
-vehicles with less than 350,000 miles on it.
 
-
-I also exclude observations that have an odometer value of `0` unless its a new 
-vehicle. In most cases its not reasonable for an automobile to have a `0` 
-odometer value, unless its for a new vehicle and even then it would likely be 
-rounded to zero, as miles are registered on the vehicle from the vehicle assmebly
-line itself as part of the manufacturing process.
-The extreme observations are removed.
+The extreme observations are removed, by excluding the top and bottom 1 percentile
+of the observations.
 
 ```{R}
 quantile(age_filtered$odometer,probs = seq(0,1,.01))
@@ -314,21 +354,26 @@ odo_dist<-odo_filtered %>%group_by(odometer) %>% summarise(count = n())
 ggplot(data=odo_dist,aes(x=odometer,y=count)) + geom_point(aes(colour="#69b3a2"))
 ```
 
-The distribution indicates that while some of the observations report very specific 
-mileage, other approximate or round off the mileage to a nearest number.
-this is a case where we can discretize the continuous variables to eliminate the
+The distribution of the reported odometer readings are peculiar, and appear stratified.
+There are high incidents of certain values while even close neighbours to the value
+is has a lower incidence rate. This is an indication that while some of the 
+observations report very specific mileage, other approximate or round off the 
+mileage to a nearest number, and these rounded off odometer readings have a higher frequency.
+This is a case where we can discretize the continuous variables to eliminate the
 variance caused by the reporting. A quick histograpm shows us the frequency 
 distribution of the variable values. We can see that automobiles with less than 150,000
 miles on the odometer are most common and beyond that the number of automobiles 
 on the market tapers off with increasing odometer readings. This pattern holds in 
 line with conventional knowledge about the lifespan of an automobile.
+
 ```{R}
 hist(odo_filtered$odometer,col = "112")
 ggplot(data = odo_filtered,aes(x=odometer))+geom_histogram(binwidth=2500, fill="#69b3a2", color="#e9ecef", alpha=0.9)
 
 ```
-As an initial strategy, I select the bin sizes to split the dataset in to 20 bins,
-with approximately the same number of automobiles in every bin.
+
+As an initial strategy, I select the bin sizes to split the dataset in to 5-percentile bins. 
+This gives us 20 bins, with approximately the same number of automobiles in every bin.
 
 ```{R}
 odo_binned <- odo_filtered %>% mutate(mileage = cut(odometer, breaks = quantile(complete$odometer,probs = seq(0,1,.05)))) 
@@ -338,6 +383,7 @@ mileage_dist <- odo_binned %>% group_by(mileage) %>% summarise(count=n(),pr=medi
 We can observe from the frequency distribution that as the odometer reading increases,
 there are more cars being brought to the market. The shading also indicates an 
 inverse relationship with between the odometer values and price.
+
 ```{R}
 ggplot(data=mileage_dist,aes(x=mileage,y=count,fill=pr)) + geom_bar(stat="identity", width=1)
 ```
@@ -347,8 +393,6 @@ ggplot(data=mileage_dist,aes(x=mileage,y=count,fill=pr)) + geom_bar(stat="identi
 Understandig the Univariate and Multivariate statistics on the pricing hepls us 
 build statistical inferece of the distribution of pricing and visualize simple 
 hypothesis of association.
-
-#### Univariate statistics
 
 A quick glance at the univariate statistics of the price variable shows some 
 patterns. The histogram for the price seems to have concentrated the values in 
@@ -363,7 +407,7 @@ several orders of magnitude different.
 
 #univariate statistics
 summary(odo_binned$price)
-# hsitogram
+# histogram
 hist(odo_binned$price)
 quantile(odo_binned$price,probs = seq(0,1,.01))
 ```
@@ -386,9 +430,8 @@ see that upto the 10th percentile, the `price` is `0`. We are excluding these
 observations, as the price is not indicative of the actual expected sale price.
 
 ```{r}
-price_filtered<-odo_binned %>% 
-    filter(price > 0) %>% 
-    filter(price >= quantile(odo_binned$price,.01) & price <= quantile(odo_binned$price,.99))
+price_filtered <- odo_binned %>% filter(price > 0)
+price_filtered <- price_filtered %>% filter(price<= quantile(price_filtered$price,.95) & price>= quantile(price_filtered$price,.05) )
 ggplot(data = price_filtered,aes(x=price))+geom_histogram( binwidth=1000, fill="#69b3a2", color="#e9ecef", alpha=0.9)
 ```
 
@@ -398,5 +441,191 @@ price_dist<-price_filtered %>%
     summarise(count = n()) 
 ggplot(data=price_dist,aes(x=price,y=count)) + geom_point(aes(colour=price, size=count))
 ```
+
+
+Lets look at the distribution and make sure t meets the assumptions of a linear model.
+
+```{r}
+ggplot(price_filtered, aes(sample=price)) + stat_qq() + stat_qq_line()
+hist(price_filtered$price)
+skewness(price_filtered$price)
+```
+
+The normal Q-Q plot does not seem to indicate that the pricing follows a strictly
+normal distribution. The histogram gives us a clue that this distribution has a
+positive skew. We can confirm this from the skewness. Performaing a log 
+transformation, would likely yeild a better distribution here. 
+
+```{r}
+skewness(log(price_filtered$price))
+hist(log(price_filtered$price))
+ggplot(price_filtered, aes(sample=log(price))) + stat_qq() + stat_qq_line()
+```
+
+We see that the skewness has improved and that the histograms and the normal q-q
+plot reflect that.
+
+
+Pearson’s correlation coefficient is a test statistic that measures the statistical relationship, or association, between two continuous variables. It gives information about the magnitude of the association, or correlation, as well as the direction of the relationship.
+
+```{r}
+cor.test(price_filtered$price,price_filtered$age, method="pearson")
+cor.test(price_filtered$price,price_filtered$odometer, method="pearson")
+```
+Since the coefficient value lies between ± 0.50 and ± 1, we can conclude this to
+be a strong correlation, and since the corelation coeffcient is negative, the 
+association is also negative, meaning as `age` or `odometer` values increase, the price
+decreases.
+
+For categoriacal variables, we can perform the kruskal wallis test
+Using the Kruskal-Wallis Test, we can decide whether the population 
+distributions are identical without assuming them to follow the normal distribution. 
+
+```{r}
+kruskal.test(price ~ manufacturer, data = price_filtered)
+kruskal.test(price ~ transmission, data = price_filtered)
+kruskal.test(price ~ cylinders, data = price_filtered)
+```
+
+`VIN` is obviously not a good predictor
+
+```{r}
+kruskal.test(price ~ VIN, data = price_filtered)
+```
+
+### Enhancing the data
+
+The data we have so far have been cleaned with respect to outliers and incomplete 
+observations. However, we can still improve the data quality by using techniques
+to normalize the factors and impute features.
+
+#### Imputing State information
+
+The original dataset does not breakdown the data to the state levels. Craigslist 
+uses a notion of locality to determine the granularity of thier classified pages.
+Typically densely populated regions might be broken in to more localized sites, 
+whereas more sparsely populated regions or areas where the number of classified 
+postes are fewer, are aggregated in to larger areas. Sometimes an entire state may be
+respresented by a couple of classified sites. These sites are referred to as 
+`CityURL` in the dataset. We resolve this challenge of inferring the state by 
+separately scraping each individual classified site (`CityURL`) and extracting 
+the state information from it. This lets us build a look-up index that maps the 
+`CityURL` to a state code.
+
+The original data contains the `CityURL` for each classified listing. We can now
+use  the index we built to cross referece the state information with the `CityURL`
+and impute the value of `State` in to every observation.
+
+```{R}
+state_inferred<-left_join(price_filtered,cities,by="city_url")
+state_inferred$State<- factor(state_inferred$State)
+state_inferred$City<- factor(state_inferred$City)
+levels(state_inferred$State)
+```
+
+#### Inferring the Model and Trim level 
+
+One of the challenges with a dataset created from web content is that the data is 
+generally not created with the intention of being used in statistical analysis. 
+This means that extracting features and normalizing the levels of the factors are
+a significant challenge for human generated content, especially free form text.
+
+In this dataset, we have a field named `make` that describes the automobile that
+is being listed in the classified. This is not structured data however and is instead 
+freeform text. Conventional wisdom tells us that the price of an automobile is related 
+to its mopdel and trim level. We can use data science to test this assumption. 
+However, in a certain sense the model of a vehicle is a way for the manufacturer to 
+abstract a number of features for an automobile. For instance, a Honda mid-size 
+sedan might be labelled with a model "Accord". This can be seen as a natural way 
+where a number of features like engine displacement, seating capacity, body style,
+cargo capacity etc. are collapsed in to a single level of a feature. Trims are also
+similar in nature, with each trim level adding certain set of features that contribute 
+to the final price.
+
+A quick look at the `make` feature shows that this is effectively unstructured data.
+
+```{r}
+head(state_inferred$make)
+```
+
+This unstructured data can be processed in many ways, we use a brute force method 
+here. Since the model excludes classic cars, we can break down the dataset by 
+manufacturer and parse out the model and trim level information using regular
+expressions. The regular expressions vary in complexity as in many cases vehicle 
+models are known by nick names rather than their official monikers (the ford 
+Thunderbird is commonly reffered to as a T-bird). We also take adavanatage of the fact that in most cases the `make` feature is simply a concatenation of the model and trim.
+
+Once a model or trim is known, we can infer more features like the size class of the vehicle, the body style and its type. These provide further features that give us good correlation with the price, as cxan be seen in further sections. 
+
+Wikipedia was used as the primary source for each of the manufacturer's models 
+and trims. The collected data is imported as a separate dataset that maps the
+various models from each manufacturer to thier size class and type.
+
+We take a two step approach in processing the `make` field in to  `model`, `trim`,
+`type` and `size`.  We first isolate the observations for each manufacturer. Then 
+the `make` valur for these observations are passed through a regular expression matcher to identify known models and trims from the manufacturer. Once the models and trims are matched, the master data is used to infer the `type` and `size`. It should
+be noted that in many cases the `size` is provided by the classified data, however
+we use the master data which is more realiable to infer the `size` feature for 
+every observation. The approach is demonstrated for one manufacturer below, but 
+is repeated for all manufacturers.
+
+```{r}
+ford <- complete[which(complete$manufacturer=="ford"),]
+nrow(ford)
+for (row in 1:nrow(ford)) {
+    make <- ford[row, "make"]
+    model <- ford_models(make)
+    trim  <- ford_trims(make,model)    
+    if(is.na(model) || model == ""){
+        ford[row, "model"] = NA
+    }else{
+        ford[row, "model"] = model
+    }
+    if(is.na(trim)||trim == ""){
+        ford[row, "trim"] = NA
+    }else{
+        ford[row, "trim"] = trim
+    }
+}
+nrow(ford)
+ford <- drop_na(ford,model)
+droplevels.factor(ford$model)
+levels(ford$model)
+sig_ford <- ford %>% group_by(model,trim) %>% summarise(count = n()) %>% filter(count > 10)
+
+nrow(ford %>% filter(is.na(model)))
+
+
+ford <- ford %>% filter(model %in% sig_ford$model) %>% filter(trim %in% sig_ford$trim)
+ford$model<-factor(ford$model)
+ford$trim<-factor(ford$trim)
+ford[] <- lapply(ford, function(x) if(is.factor(x)) factor(x) else x)
+
+## Ford Consumer Auto
+ford_c <- ford %>% filter(!model %in% c("e-150","e-250","e-350","e-450","e-series","econoline","t-150","t-250","t-350","transit","lcf"))
+ford_c$type <- as.character(ford_c$type)
+ford_c$size <- as.character(ford_c$size)
+for (row in 1:nrow(modelTypes)){
+    name <- str_trim(modelTypes[row,"model_name"])
+    body_type <-  modelTypes[row,"body_type"]
+    body_size <-  modelTypes[row,"size"]
+    
+    ford_c$type[ford_c$model == name ] <- body_type
+    ford_c$size[ford_c$model == name ] <- body_size
+}
+
+ford_c$type <- factor(unlist(ford_c$type))
+ford_c$size <- factor(unlist(ford_c$size))
+
+```
+
+
+### Building a Multiple Regression Model 
+
+
+### Building a Regression model based on Gradient Boosting Machine.
+
+
+
 
 [ford]["https://www.ford.com"]

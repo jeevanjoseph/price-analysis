@@ -81,12 +81,15 @@ ford_models <- function(make){
              grepl("tauras",make,ignore.case = TRUE) ||
              grepl("taurs",make,ignore.case = TRUE) ||
              grepl("taurus",make,ignore.case = TRUE)){
-        model = "Mustang"
-    } else if (grepl("exporer",make,ignore.case = TRUE) ||
-               grepl("explorer",make,ignore.case = TRUE) ||
-               grepl("explore",make,ignore.case = TRUE) ||
-               grepl("exploler",make,ignore.case = TRUE) ||
-               grepl("expidition",make,ignore.case = TRUE) ||
+        model = "Taurus"
+    }else if(grepl("exporer",make,ignore.case = TRUE) ||
+             grepl("explorer",make,ignore.case = TRUE) ||
+             grepl("explore",make,ignore.case = TRUE) ||
+             grepl("exploler",make,ignore.case = TRUE) ||
+             grepl("exolore",make,ignore.case = TRUE) ||
+             grepl("exlorer",make,ignore.case = TRUE)){
+        model = "Explorer"
+    } else if (grepl("expidition",make,ignore.case = TRUE) ||
                grepl("expetidition",make,ignore.case = TRUE) ||
                grepl("expeidtion",make,ignore.case = TRUE) ||
                grepl("expedtion",make,ignore.case = TRUE) ||
@@ -94,10 +97,8 @@ ford_models <- function(make){
                grepl("expeditionex",make,ignore.case = TRUE) ||
                grepl("expedition,eddie",make,ignore.case = TRUE) ||
                grepl("expedition",make,ignore.case = TRUE) ||
-               grepl("exp",make,ignore.case = TRUE) ||
-               grepl("exolore",make,ignore.case = TRUE) ||
-               grepl("exlorer",make,ignore.case = TRUE)){
-        model = "explorer"
+               grepl("exp",make,ignore.case = TRUE)){
+        model = "Expedition"
     }else if(grepl("150",make,ignore.case = TRUE)){
         if(ford[row, "make"] == "van"){
             model = "e-150"    

@@ -1,10 +1,16 @@
 install.packages("tidyverse")
+install.packages("naniar")
+install.packages("plotly")
+install.packages("e1071")
+library(e1071)
+library(plotly)
 library(tidyr)
 library(readr)
 library(dplyr)
 library(stringr)
 library(ggplot2)
 library(MASS)
+library(naniar)
 source("ford.R", local = TRUE)
 source("bmw.R", local = TRUE)
 source("toyota.R", local = TRUE)
@@ -34,6 +40,34 @@ data$drive <- factor(data$drive)
 
 summary(data);
 
+## Explore initial data
+
+gg_miss_var(data, show_pct = TRUE)
+#vis_miss(data, warn_large_data = FALSE)
+
+## Georaphic map
+g <- list(
+    scope = 'usa',
+    projection = list(type = 'albers usa'),
+    showland = TRUE,
+    landcolor = toRGB("gray95"),
+    subunitcolor = toRGB("gray85"),
+    countrycolor = toRGB("gray85"),
+    countrywidth = 0.5,
+    subunitwidth = 0.5
+)
+p <- plot_geo(data, lat = ~lat, lon = ~long) %>%
+    add_markers(
+        text = ~paste(manufacturer, year, title_status, sep = "<br />"),
+        color = ~type, symbol = I(""), size = I(3), hoverinfo = "text"
+    ) %>%
+    colorbar(title = "Type") %>%
+    layout(
+        title = 'Automobile classifiedfs on Craigslist', geo = g
+    )
+p %>% offline(height = 800)
+
+
 #complete <- data[complete.cases(data),]
 complete <- data %>%  
     drop_na(odometer) %>%
@@ -49,7 +83,7 @@ complete <- data %>%
     drop_na(make)
 
 
-### Deleet Duplicate VIN Numbers
+### Delete Duplicate VIN Numbers
 
 no_vin <- complete %>% filter(is.na(VIN))
 
@@ -62,7 +96,7 @@ complete <- valid_vin
 # clean manufacturers
 manu_dist <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% arrange(count)
 manu_dist$manufacturer <- factor(manu_dist$manufacturer, levels = manu_dist$manufacturer[order(manu_dist$count)])
-ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
+#ggplot(manu_dist, aes(x=manufacturer, y=count, fill=manufacturer)) + geom_bar(stat="identity", width=1)
 
 sig_manu <- complete %>% group_by(manufacturer)%>%summarise(count = n()) %>% filter(count>(.02*nrow(complete)))
 
@@ -79,6 +113,7 @@ year_dist <- complete %>% group_by(year) %>% summarise(count = n()) %>% arrange(
 
 complete$age <- with(complete, 2020-year)
 complete <- complete %>% filter(age<=20 & age>=0)
+
 
 # clean odometer
 
@@ -141,17 +176,32 @@ price_dist<-complete %>%
     mutate(price_bin = cut(price, breaks = c(0,1000,2500,3500,5000,6500,9000,12000,16000,20000,25000,30000,35000,40000,45000,50000))) %>%
     group_by(price_bin) %>%
     summarise(count = n())
-ggplot(data=price_dist,aes(x=price_bin,y=count)) + geom_bar(stat="identity", width=1)
+ggplot(data=price_dist,aes(x=price_bin,y=count)) + geom_bar(stat="identity", width=1) 
 
 complete <- complete %>% filter(price > 0)
-complete <- complete %>% filter(price<= quantile(complete$price,.98) & price>= quantile(complete$price,.02) )
+complete <- complete %>% filter(price<= quantile(complete$price,.95) & price>= quantile(complete$price,.05) )
 
 summary(complete$price)
-hist(complete$price)
+hist(log(complete$price))
 
-#binned <- complete %>% mutate(price_bin = cut(price, breaks = quantile(price, probs = seq(0, 1, .1)))) %>% group_by(price_bin)%>%summarise(count = n())
-#ggplot(data=binned,aes(x=price_bin,y=count,fill=price_bin)) + geom_bar(stat="identity", width=1)
+## Lets look at the distribution and make sure t meets the assumptions of a linear model.
+ggplot(complete, aes(sample=price)) + stat_qq() + stat_qq_line()
 
+## Visualize the relationship sbetween the predictors and the response variable
+
+cor.test(complete$price,complete$age, method="pearson")
+cor.test(complete$price,complete$odometer, method="pearson")
+
+# For categoriacal variables, we can perform the kruskal wallis test
+# Using the Kruskal-Wallis Test, we can decide whether the population 
+# distributions are identical without assuming them to follow the normal distribution. 
+
+kruskal.test(price ~ manufacturer, data = complete)
+kruskal.test(price ~ transmission, data = complete)
+kruskal.test(price ~ cylinders, data = complete)
+
+# VIn is obviously not a good predictor
+kruskal.test(price ~ VIN, data = complete)
 
 #Clean state, city
 
@@ -558,15 +608,9 @@ summary(comp_set)
 
 comp_set %>% write_csv("clean_dataset_logp.csv")
 
-comp_set %>% filter(age<2) %>% View
+sample <- comp_set %>% sample_n(2000)
 
-ggplot(data=comp_set,aes(x=size,y=price,fill=size)) + geom_bar(stat="identity", width=1)
-
-sample <- comp_set %>% sample_n(500)
-
-sample %>% group_by(manufacturer) %>% summarise(count = n()) %>% View
-
-linearMod <- lm(logPrice ~age*mileage*cylinders+model:mileage+model:age+condition+trim+title_status+drive+size, data=comp_set) 
+linearMod <- lm(logPrice ~(model+trim+condition+cylinders+fuel+odometer+title_status+transmission+drive+size+paint_color+age+mileage+type)^2, data=sample) 
 summary(linearMod)
 plot(linearMod)
 
